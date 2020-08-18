@@ -1,3 +1,3 @@
 using DrWatson
-@quickactivate "embedding"
+@quickactivate "new-embedding-project"
 DrWatson.greet()

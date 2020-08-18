@@ -1,6 +1,11 @@
 name = "new-embedding-methods"
 authors = ["George Datseris", "Hauke Kraemer"]
+
+[deps]
+DelayEmbeddings = "5732040d-69e3-5649-938a-b6b4f237613f"
+DrWatson = "634d3b9d-ee7a-5ddf-bec9-22491ea816e1"
+NearestNeighbors = "b8a86587-4115-5ab1-83bc-aa920d37bbce"
+Peaks = "18e31ff7-3703-566c-8e60-38913d67486b"
+
 [compat]
 julia = "1.5.0"
-[deps]
-DrWatson = "634d3b9d-ee7a-5ddf-bec9-22491ea816e1"

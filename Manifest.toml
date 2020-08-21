@@ -32,7 +32,7 @@ uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
 
 [[DelayEmbeddings]]
 deps = ["Distances", "Distributions", "LinearAlgebra", "NearestNeighbors", "Neighborhood", "RecipesBase", "StaticArrays", "Statistics", "StatsBase"]
-git-tree-sha1 = "07f4a55ca1913fe13c5f99b4baba6c821039654e"
+git-tree-sha1 = "9b2ca450e0bfc964d6723e1d211de5827de4a102"
 repo-rev = "Pecora_update"
 repo-url = "https://github.com/JuliaDynamics/DelayEmbeddings.jl.git"
 uuid = "5732040d-69e3-5649-938a-b6b4f237613f"

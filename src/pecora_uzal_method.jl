@@ -23,9 +23,11 @@ A unified approach to properly embed a time series or a set of time series
 * `K::Int = 13`: the amount of nearest neighbors in the δ-ball (read algorithm description).
    Must be at least 8 (in order to gurantee a valid statistic). `⟨ε★⟩` is computed
    taking the minimum result over all `k ∈ K` (read algorithm description).
-* `KNN = 3`: the amount of nearest neighbors considered, in order to compute σ_k^2
-  (read algorithm description). If given a vector, minimum result over all
-  `knn ∈ KNN` is returned.
+* `KNN::Int = 3`: the amount of nearest neighbors considered, in order to compute
+  σ_k^2 (read algorithm description [`uzal_cost`]@ref). If given a vector, minimum
+  result over all `knn ∈ KNN` is returned.
+* `Tw::Int = 4*w`: the maximal considered time horizon for obtaining σ_k^2 (read
+   algorithm description [`uzal_cost`]@ref).
 * `metric = Euclidean()`: metric with which to find nearest neigbhors
 * `α::Real = 0.05`: The significance level for obtaining the continuity statistic
 * `p::Real = 0.5`: The p-parameter for the binomial distribution used for the
@@ -68,16 +70,12 @@ as an `Array` of `Vector`s.
 [^Uzal2011]: Uzal, L. C., Grinblat, G. L., Verdes, P. F. (2011). [Optimal reconstruction of dynamical systems: A noise amplification approach. Physical Review E 84, 016223](https://doi.org/10.1103/PhysRevE.84.016223).
 """
 function pecora_uzal_embedding(s::Vector{T}; τs = 0:50 , w::Int = 1,
-    samplesize::Real = 1, K::Int = 13, KNN::Int = 3,
+    samplesize::Real = 1, K::Int = 13, KNN::Int = 3, Tw::Int=4*w,
     metric = Euclidean(), α::Real = 0.05, p::Real = 0.5,
     max_num_of_cycles = 50) where {T<:Real}
 
     @assert 0 < samplesize ≤ 1 "Please select a valid `samplesize`, which denotes a fraction of considered fiducial points, i.e. `samplesize` ∈ (0 1]"
     @assert all(x -> x ≥ 0, τs)
-
-    #automatically compute Tw
-    optimal_τ = estimate_delay(s, "mi_min")
-    Tw = 4*optimal_τ
 
     s = regularize(s) # especially important for multivariate embedding and comparison
     # define actual phase space trajectory

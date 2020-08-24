@@ -3,8 +3,8 @@ using DrWatson
 
 using DelayEmbeddings
 using DynamicalSystemsBase
-using DifferentialEquations
-using Random
+#using DifferentialEquations
+#using Random
 using Test
 using DelimitedFiles
 
@@ -31,7 +31,7 @@ println("\nTesting pecora_uzal_method.jl...")
     KNN = 3
     Tw = 56
 
-    @time Y, τ_vals, ts_vals, Ls , ε★ = pecora_uzal_embedding(s;
+    @time Y, τ_vals, ts_vals, Ls , ε★ = pecuzal_embedding(s;
                                         τs = 0:Tmax , w = w, samplesize = samplesize,
                                         K = K, KNN = KNN, Tw = Tw)
 

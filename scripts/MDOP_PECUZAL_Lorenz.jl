@@ -30,16 +30,18 @@ Tw = 50
                                     τs = 0:Tmax , w = w, samplesize = samplesize,
                                     K = K, KNN = KNN, Tw = Tw)
 
-# TODO make mdop_maximum_delay work
-# @time Tmax2 = mdop_maximum_delay(s)
-
-Tmax2 = 20
-@time Y2, τ_vals2, ts_vals2, FNNs , βs = mdop_embedding(s;
-                                    τs = 0:Tmax2 , w = w)
+@time Tmax2, Lss = mdop_maximum_delay(s)
+Tmax2 = 10
+ttaus = 0:Tmax2
+@time Y2, τ_vals2, ts_vals2, FNNs , βs = mdop_embedding(s; τs = ttaus , w = w)
 
 # Plot results
 using PyPlot
 pygui(true)
+
+figure()
+plot(1:50,Lss)
+
 figure(figsize=[12, 8])
 subplot(121)
 for i in 1:length(ts_vals)

@@ -15,12 +15,6 @@ git-tree-sha1 = "008d6bc68dea6beb6303fdc37188cb557391ebf2"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.12.4"
 
-[[Compat]]
-deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "SHA", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
-git-tree-sha1 = "083e7e5ec3ef443e9dcb6dd3fbcb815879823bfa"
-uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "3.14.0"
-
 [[CompilerSupportLibraries_jll]]
 deps = ["Libdl", "Pkg"]
 git-tree-sha1 = "7c4f882c41faa72118841185afc58a2eb00ef612"
@@ -50,15 +44,11 @@ uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
 
 [[DelayEmbeddings]]
 deps = ["Distances", "Distributions", "LinearAlgebra", "NearestNeighbors", "Neighborhood", "RecipesBase", "StaticArrays", "Statistics", "StatsBase"]
-git-tree-sha1 = "c5cd44f9c329d2b2ab397a7d6cc88020b9df0147"
-repo-rev = "Pecora_update"
+git-tree-sha1 = "ed3483322e0277c560b0ebe34aff5ab141a64092"
+repo-rev = "pecora_fix_bug_in_continuity"
 repo-url = "https://github.com/JuliaDynamics/DelayEmbeddings.jl.git"
 uuid = "5732040d-69e3-5649-938a-b6b4f237613f"
 version = "1.9.0"
-
-[[DelimitedFiles]]
-deps = ["Mmap"]
-uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 
 [[Distances]]
 deps = ["LinearAlgebra", "Statistics"]
@@ -72,9 +62,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[Distributions]]
 deps = ["FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns"]
-git-tree-sha1 = "dec9607adfa6a82399cce0bd9b8557f8cc3b7bcd"
+git-tree-sha1 = "f5fedf30cbc2492649da086f43634f5271571409"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.23.9"
+version = "0.23.10"
 
 [[DrWatson]]
 deps = ["Dates", "FileIO", "LibGit2", "Pkg", "Random", "Requires", "UnPack"]
@@ -90,9 +80,9 @@ version = "1.4.1"
 
 [[FillArrays]]
 deps = ["LinearAlgebra", "Random", "SparseArrays"]
-git-tree-sha1 = "9a457808000939be5f052291cbed7de409c2839d"
+git-tree-sha1 = "56dc5338eb79a05e5ea120f510ed77efe7e9784d"
 uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
-version = "0.9.4"
+version = "0.9.5"
 
 [[FixedPointNumbers]]
 deps = ["Statistics"]
@@ -141,9 +131,9 @@ uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
 [[Missings]]
 deps = ["DataAPI"]
-git-tree-sha1 = "de0a5ce9e5289f27df672ffabef4d1e5861247d5"
+git-tree-sha1 = "ed61674a0864832495ffe0a7e889c0da76b0f4c8"
 uuid = "e1d29d7a-bbdc-5cf2-9ac0-f12de2c33e28"
-version = "0.4.3"
+version = "0.4.4"
 
 [[Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
@@ -155,10 +145,10 @@ uuid = "b8a86587-4115-5ab1-83bc-aa920d37bbce"
 version = "0.4.4"
 
 [[Neighborhood]]
-deps = ["Distances", "NearestNeighbors", "Random"]
-git-tree-sha1 = "45458eab820244c08928611f8018589cd97e128e"
+deps = ["Distances", "NearestNeighbors", "Random", "Test"]
+git-tree-sha1 = "f77b854e2090db24e09697035d78b441666deb8e"
 uuid = "645ca80c-8b79-4109-87ea-e1f58159d116"
-version = "0.1.0"
+version = "0.2.0"
 
 [[OpenSpecFun_jll]]
 deps = ["CompilerSupportLibraries_jll", "Libdl", "Pkg"]
@@ -183,12 +173,6 @@ git-tree-sha1 = "8077624b3c450b15c087944363606a6ba12f925e"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
 version = "1.0.10"
 
-[[Peaks]]
-deps = ["Compat", "UnsafeArrays"]
-git-tree-sha1 = "f0e08f0944cd1ed209155ac818c92bd6268dbe59"
-uuid = "18e31ff7-3703-566c-8e60-38913d67486b"
-version = "0.2.1"
-
 [[Pkg]]
 deps = ["Dates", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "UUIDs"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
@@ -211,9 +195,9 @@ version = "2.9.0"
 
 [[QuadGK]]
 deps = ["DataStructures", "LinearAlgebra"]
-git-tree-sha1 = "0ab8a09d4478ebeb99a706ecbf8634a65077ccdc"
+git-tree-sha1 = "12fbe86da16df6679be7521dfb39fbc861e1dc7b"
 uuid = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
-version = "2.4.0"
+version = "2.4.1"
 
 [[REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets"]
@@ -257,10 +241,6 @@ uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 
 [[Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
-
-[[SharedArrays]]
-deps = ["Distributed", "Mmap", "Random", "Serialization"]
-uuid = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
 
 [[Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
@@ -322,11 +302,6 @@ version = "1.0.2"
 
 [[Unicode]]
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
-
-[[UnsafeArrays]]
-git-tree-sha1 = "9740b414f85ec2fa9135066f81b1fb14212befd6"
-uuid = "c4a57d5a-5b31-53a6-b365-19f8c011fbd6"
-version = "1.0.1"
 
 [[VersionParsing]]
 git-tree-sha1 = "80229be1f670524750d905f8fc8148e5a8c4537f"

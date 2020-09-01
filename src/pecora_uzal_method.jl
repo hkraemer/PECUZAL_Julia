@@ -1,5 +1,9 @@
-using DrWatson
-@quickactivate "new-embedding-methods"
+# using DrWatson
+# @quickactivate "new-embedding-methods"
+
+using DelayEmbeddings
+using DynamicalSystemsBase
+using Random
 
 export pecuzal_embedding
 
@@ -148,7 +152,6 @@ function pecuzal_embedding(Y::Dataset{D, T}; τs = 0:50 , w::Int = 1,
 end
 
 
-
 """
 Perform one embedding cycle on `Y`
 """
@@ -159,7 +162,7 @@ function pecuzal_embedding_cycle!(
     ε★, _ = pecora(s, Tuple(τ_vals), Tuple(ts_vals); delays = τs, w = w,
                 samplesize = samplesize, K = K, metric = metric, α = α,
                 p = p, undersampling = false)
-    ε★s[counter] = ε★
+    ε★s[:,counter] = ε★
 
     # zero-padding of ⟨ε★⟩ in order to also cover τ=0 (important for the multivariate case)
     ε★ = vec([0; ε★])
@@ -202,11 +205,11 @@ function pecuzal_multivariate_embedding_cycle!(
         end
         L_mini, min_idx = findmin(L_min)
         # update τ_vals, ts_vals, Ls, ε★s
-        push!(τ_vals, L_min_idx[min_idx])
+        push!(τ_vals, τs[L_min_idx[min_idx]])
         push!(ts_vals, min_idx)             # time series to start with
         push!(ts_vals, idx[min_idx])        # result of 1st embedding cycle
         push!(Ls, L_mini)
-        ε★s[counter] = ε★[:,M*ts_vals[1]-(M-1):M*ts_vals[1]]
+        ε★s[counter] = ε★[:,1+(M*(ts_vals[1]-1)):M*ts_vals[1]]
 
         # create phase space vector for this embedding cycle
         Y_act = DelayEmbeddings.hcat_lagged_values(Ys[:,ts_vals[counter]],
@@ -243,10 +246,9 @@ function choose_right_embedding_params!(ε★, Y, Ys, τ_vals, ts_vals, Ls, ε�
         L_min_[ts], min_idx_ = findmin(L_trials_)
         τ_idx[ts] = max_idx_[min_idx_]-1
     end
-    display(L_min_)
     idx = sortperm(L_min_)
     L_mini, min_idx = findmin(L_min_)
-    push!(τ_vals, τ_idx[min_idx])
+    push!(τ_vals, τs[τ_idx[min_idx]])
     push!(ts_vals, min_idx)
     push!(Ls, L_mini)
 

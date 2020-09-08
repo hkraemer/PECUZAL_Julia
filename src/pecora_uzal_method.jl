@@ -102,12 +102,16 @@ function pecuzal_embedding(s::Vector{T}; τs = 0:50 , w::Int = 1,
         Y_act = pecuzal_embedding_cycle!(
                 Y_act, flag, s, τs, w, counter, ε★s, τ_vals, metric,
                 Ls, ts_vals, samplesize, K, α, p, Tw, KNN)
-
         flag = pecuzal_break_criterion(Ls, counter, max_num_of_cycles)
         counter += 1
     end
-
-    return Y_act[:,1:end-1], τ_vals[1:end-1], ts_vals[1:end-1], Ls, ε★s[:,1:counter-1]
+    # construct final reconstruction vector
+    NN = (length(s)-sum(τ_vals[1:counter-1]))
+    Y_final = s
+    for i = 2:length(τ_vals[1:counter-1])
+        Y_final = DelayEmbeddings.hcat_lagged_values(Y_final,s,τ_vals[i])
+    end
+    return Y_final, τ_vals[1:end-1], ts_vals[1:end-1], Ls, ε★s[:,1:counter-1]
 
 end
 
@@ -133,7 +137,6 @@ function pecuzal_embedding(Y::Dataset{D, T}; τs = 0:50 , w::Int = 1,
     τ_vals = Int64[0]
     ts_vals = Int64[]
     Ls = Float64[]
-    #ε★s = Array{T}(undef, length(τs), max_num_of_cycles)
     ε★s = fill(zeros(T, length(τs), size(Y,2)), 1, max_num_of_cycles)
 
     # loop over increasing embedding dimensions until some break criterion will
@@ -147,7 +150,13 @@ function pecuzal_embedding(Y::Dataset{D, T}; τs = 0:50 , w::Int = 1,
         counter += 1
     end
 
-    return Y_act[:,1:end-1], τ_vals[1:end-1], ts_vals[1:end-1], Ls, ε★s[:,1:counter-1]
+    # construct final reconstruction vector
+    Y_final = Y[:,ts_vals[1]]
+    for i = 2:length(τ_vals[1:counter-1])
+        Y_final = DelayEmbeddings.hcat_lagged_values(Y_final,Y[:,ts_vals[i]],τ_vals[i])
+    end
+
+    return Y_final, τ_vals[1:end-1], ts_vals[1:end-1], Ls, ε★s[:,1:counter-1]
 
 end
 
@@ -188,7 +197,7 @@ function pecuzal_multivariate_embedding_cycle!(
         Ls, ts_vals, samplesize, K, α, p, Tw, KNN)
 
     M = size(Ys,2)
-    # in the 1st cycle we have to check all (size(Y,2))! combinations
+    # in the 1st cycle we have to check all (size(Y,2)^2 combinations
     if counter == 1
         L_min = zeros(M)
         L_min_idx = zeros(Int, M)

@@ -1,8 +1,8 @@
 # using DrWatson
 # @quickactivate "new-embedding-methods"
 #
-# using DelimitedFiles, PyPlot
-# pygui(true)
+using DelimitedFiles, PyPlot
+pygui(true)
 
 # Here plot the results from scripts `dependence_on_alpha.jl`, `dependence_on_K.jl`,
 # `dependence_on_p.jl`, `dependence_on_delta_neighborhood.jl`, `dependence_on_Tw.jl`,
@@ -27,12 +27,14 @@ right = 0.96,
 bottom = 0.05,
 top = 0.96,
 wspace = 0.25,
-hspace = 0.38)
+hspace = 0.4)
 
 rcParams = PyPlot.PyDict(PyPlot.matplotlib."rcParams")
 font0 = Dict(
         "font.size" => fsa,
+        "font.weight" => "bold",
         "axes.labelweight" => "normal",
+        "axes.titleweight" => "bold",
         "axes.labelsize" => axislabelsize,
         "axes.linewidth" => lwa,
         "xtick.labelsize" => ticklabelsize,
@@ -48,10 +50,10 @@ Ls = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-
 τ_vals = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_K_tau_vals.csv")
 
 ax = fig.add_subplot(5, 2, 1)
-p1 = plot(Ks, Ls[:,1], label="embedding cylce 1", linewidth=lwg)
+p1 = plot(Ks, Ls[:,1], label="1st embedding cylce", linewidth=lwg)
 color1 = p1[1].get_color()
 scatter(Ks, Ls[:,1], label="")
-p2 = plot(Ks, Ls[:,2], label="embedding cylce 2", linewidth=lwg)
+p2 = plot(Ks, Ls[:,2], label="2nd embedding cylce", linewidth=lwg)
 color2 = p2[1].get_color()
 scatter(Ks, Ls[:,2], label="")
 legend()
@@ -63,11 +65,11 @@ xlabel("K-NN")
 grid()
 
 ax = fig.add_subplot(5, 2, 2)
-plot(Ks, τ_vals[:,1], label="τ₁, embedding cylce 0", linewidth=lwg, color="r")
+plot(Ks, τ_vals[:,1], label="τ₀, 1st embedding cylce", linewidth=lwg, color="r")
 scatter(Ks, τ_vals[:,1], label="", color="r")
-plot(Ks, τ_vals[:,2], label="τ₂, embedding cylce 1", linewidth=lwg, color=color1)
+plot(Ks, τ_vals[:,2], label="τ₁, 2nd embedding cylce", linewidth=lwg, color=color1)
 scatter(Ks, τ_vals[:,2], label="", color=color1)
-plot(Ks, τ_vals[:,3], label="τ₃, embedding cylce 2", linewidth=lwg, color=color2)
+plot(Ks, τ_vals[:,3], label="τ₂, 3rd embedding cylce", linewidth=lwg, color=color2)
 scatter(Ks, τ_vals[:,3], label="", color=color2)
 legend(loc=1)
 ax.set_ylim([-1,24])
@@ -86,10 +88,10 @@ Ls = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-
 τ_vals = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_delta_neighborhood_tau_vals.csv")
 
 ax = fig.add_subplot(5, 2, 3)
-p1 = plot(deltas, Ls[:,1], label="embedding cylce 1", linewidth=lwg)
+p1 = plot(deltas, Ls[:,1], label="1st embedding cylce", linewidth=lwg)
 color1 = p1[1].get_color()
 scatter(deltas, Ls[:,1], label="")
-p2 = plot(deltas, Ls[:,2], label="embedding cylce 2", linewidth=lwg)
+p2 = plot(deltas, Ls[:,2], label="2nd embedding cylce", linewidth=lwg)
 color2 = p2[1].get_color()
 scatter(deltas, Ls[:,2], label="")
 #legend()
@@ -101,11 +103,11 @@ xlabel(L"\delta-Neighborhood size")
 grid()
 
 ax = fig.add_subplot(5, 2, 4)
-plot(deltas, τ_vals[:,1], label="τ₁, embedding cylce 0", linewidth=lwg, color="r")
+plot(deltas, τ_vals[:,1], label="τ₁, 1st embedding cylce", linewidth=lwg, color="r")
 scatter(deltas, τ_vals[:,1], label="", color="r")
-plot(deltas, τ_vals[:,2], label="τ₂, embedding cylce 1", linewidth=lwg, color=color1)
+plot(deltas, τ_vals[:,2], label="τ₂, 2nd embedding cylce", linewidth=lwg, color=color1)
 scatter(deltas, τ_vals[:,2], label="", color=color1)
-plot(deltas, τ_vals[:,3], label="τ₃, embedding cylce 2", linewidth=lwg, color=color2)
+plot(deltas, τ_vals[:,3], label="τ₃, 3rd embedding cylce", linewidth=lwg, color=color2)
 scatter(deltas, τ_vals[:,3], label="", color=color2)
 #legend()
 ax.set_ylim([-1,24])
@@ -126,10 +128,10 @@ Ls = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-
 
 
 ax = fig.add_subplot(5, 2, 5)
-p1 = plot(ps', Ls[:,1], label="embedding cylce 1", linewidth=lwg)
+p1 = plot(ps', Ls[:,1], label="1st embedding cylce", linewidth=lwg)
 color1 = p1[1].get_color()
 scatter(ps', Ls[:,1], label="")
-p2 = plot(ps', Ls[:,2], label="embedding cylce 2", linewidth=lwg)
+p2 = plot(ps', Ls[:,2], label="2nd embedding cylce", linewidth=lwg)
 color2 = p2[1].get_color()
 scatter(ps', Ls[:,2], label="")
 #legend()
@@ -141,11 +143,11 @@ xlabel("(binomial-) p")
 grid()
 
 ax = fig.add_subplot(5, 2, 6)
-plot(ps', τ_vals[:,1], label="τ₁, embedding cylce 0", linewidth=lwg, color="r")
+plot(ps', τ_vals[:,1], label="τ₁, 1st embedding cylce", linewidth=lwg, color="r")
 scatter(ps', τ_vals[:,1], label="", color="r")
-plot(ps', τ_vals[:,2], label="τ₂, embedding cylce 1", linewidth=lwg, color=color1)
+plot(ps', τ_vals[:,2], label="τ₂, 2nd embedding cylce", linewidth=lwg, color=color1)
 scatter(ps', τ_vals[:,2], label="", color=color1)
-plot(ps', τ_vals[:,3], label="τ₃, embedding cylce 2", linewidth=lwg, color=color2)
+plot(ps', τ_vals[:,3], label="τ₃, 3rd embedding cylce", linewidth=lwg, color=color2)
 scatter(ps', τ_vals[:,3], label="", color=color2)
 #legend()
 ax.set_ylim([-1,24])
@@ -167,10 +169,10 @@ Ls = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-
 
 
 ax = fig.add_subplot(5, 2, 7)
-p1 = plot(alphas', Ls[:,1], label="embedding cylce 1", linewidth=lwg)
+p1 = plot(alphas', Ls[:,1], label="1st embedding cylce", linewidth=lwg)
 color1 = p1[1].get_color()
 scatter(alphas', Ls[:,1], label="")
-p2 = plot(alphas', Ls[:,2], label="embedding cylce 2", linewidth=lwg)
+p2 = plot(alphas', Ls[:,2], label="2nd embedding cylce", linewidth=lwg)
 color2 = p2[1].get_color()
 scatter(alphas', Ls[:,2], label="")
 #legend()
@@ -262,8 +264,6 @@ NN =length(taus)
 εs_ = [zeros(NN,3), zeros(NN,3), zeros(NN,3), zeros(NN,3), zeros(NN,3), zeros(NN,3)]
 for j = 1:6
         for i = 1:3
-                display(i)
-                display(j)
                 εs_[j][:,i] = εs[j,(i-1)*100+i:i*NN]
         end
 end
@@ -308,9 +308,9 @@ ylims = [0, 1.4]
 
 for i = 1:6
         ax = fig.add_subplot(2, 3, i)
-        plot(taus,εs[i][:,1], label="τs=$(τ_vals[i,1])", linewidth=lwg)
-        plot(taus,εs[i][:,2], label="τs=$(τ_vals[i,2])", linewidth=lwg)
-        plot(taus,εs[i][:,3], label="τs=$(τ_vals[i,3])", linewidth=lwg)
+        plot(taus,εs[i][:,1], label="τ₀=$(τ_vals[i,1])", linewidth=lwg)
+        plot(taus,εs[i][:,2], label="τ₁=$(τ_vals[i,2])", linewidth=lwg)
+        plot(taus,εs[i][:,3], label="τ₂=$(τ_vals[i,3])", linewidth=lwg)
         plot([taus[τ_vals[i,2]+1]], [εs[i][τ_vals[i,2]+1,1]], ms_style, label="", markersize = ms, color = "black")
         plot([taus[τ_vals[i,3]+1]], [εs[i][τ_vals[i,3]+1,2]], ms_style, label="", markersize = ms, color = "black")
         legend()
@@ -344,8 +344,6 @@ NN =length(taus)
 εs_ = [zeros(NN,3), zeros(NN,3)]
 for j = 1:2
         for i = 1:3
-                display(i)
-                display(j)
                 εs_[j][:,i] = εs[j,(i-1)*100+i:i*NN]
         end
 end
@@ -390,9 +388,9 @@ merge!(rcParams, font0)
 ylims = [0, 1.4]
 
 ax = fig.add_subplot(1, 2, 1)
-plot(taus,εs[1][:,1], label="τs=$(τ_vals[1,1])", linewidth = lwg)
-plot(taus,εs[1][:,2], label="τs=$(τ_vals[1,2])", linewidth = lwg)
-plot(taus,εs[1][:,3], label="τs=$(τ_vals[1,3])", linewidth = lwg)
+plot(taus,εs[1][:,1], label="τ₀=$(τ_vals[1,1])", linewidth = lwg)
+plot(taus,εs[1][:,2], label="τ₁=$(τ_vals[1,2])", linewidth = lwg)
+plot(taus,εs[1][:,3], label="τ₂=$(τ_vals[1,3])", linewidth = lwg)
 plot([taus[τ_vals[1,2]+1]], [εs[1][τ_vals[1,2]+1,1]], ms_style, label="", markersize = ms, color = "black")
 plot([taus[τ_vals[1,3]+1]], [εs[1][τ_vals[1,3]+1,2]], ms_style, label="", markersize = ms, color = "black")
 legend()
@@ -405,9 +403,9 @@ ylabel("⟨ε★⟩")
 grid()
 
 ax = fig.add_subplot(1, 2, 2)
-plot(taus,εs[2][:,1], label="τs=$(τ_vals[2,1])", linewidth = lwg)
-plot(taus,εs[2][:,2], label="τs=$(τ_vals[2,2])", linewidth = lwg)
-plot(taus,εs[2][:,3], label="τs=$(τ_vals[2,3])", linewidth = lwg)
+plot(taus,εs[2][:,1], label="τ₀=$(τ_vals[2,1])", linewidth = lwg)
+plot(taus,εs[2][:,2], label="τ₁=$(τ_vals[2,2])", linewidth = lwg)
+plot(taus,εs[2][:,3], label="τ₂=$(τ_vals[2,3])", linewidth = lwg)
 plot([taus[τ_vals[2,2]+1]], [εs[2][τ_vals[2,2]+1,1]], ms_style, label="", markersize = ms, color = "black")
 plot([taus[τ_vals[2,3]+1]], [εs[2][τ_vals[2,3]+1,2]], ms_style, label="", markersize = ms, color = "black")
 legend()

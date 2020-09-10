@@ -37,7 +37,7 @@ A unified approach to properly embed a time series or a set of time series
 * `α::Real = 0.05`: The significance level for obtaining the continuity statistic
 * `p::Real = 0.5`: The p-parameter for the binomial distribution used for the
   computation of the continuity statistic ⟨ε★⟩.
-* `max_num_of_cycles = 50`: The algorithm will stop after that many cycles no matter what.
+* `max_cycles = 50`: The algorithm will stop after that many cycles no matter what.
 
 
 ## Description
@@ -77,14 +77,17 @@ as an `Array` of `Vector`s.
 function pecuzal_embedding(s::Vector{T}; τs = 0:50 , w::Int = 1,
     samplesize::Real = 1, K::Int = 13, KNN::Int = 3, Tw::Int=4*w,
     metric = Euclidean(), α::Real = 0.05, p::Real = 0.5,
-    max_num_of_cycles = 50) where {T<:Real}
+    max_cycles = 50) where {T<:Real}
 
     @assert 0 < samplesize ≤ 1 "Please select a valid `samplesize`, which denotes a fraction of considered fiducial points, i.e. `samplesize` ∈ (0 1]"
     @assert all(x -> x ≥ 0, τs)
-
-    s = regularize(s) # especially important for multivariate embedding and comparison
+    s_orig = s
+    s = regularize(s) # especially important for comparative L-statistics
     # define actual phase space trajectory
     Y_act = Dataset(s)
+
+    L_init = uzal_cost(Y_act; samplesize = samplesize, K = KNN, metric = metric,
+                       w = w, Tw = Tw)
 
     # set a flag, in order to tell the while loop when to stop. Each loop
     # stands for encountering a new embedding dimension
@@ -94,7 +97,7 @@ function pecuzal_embedding(s::Vector{T}; τs = 0:50 , w::Int = 1,
     τ_vals = Int64[0]
     ts_vals = Int64[1]
     Ls = Float64[]
-    ε★s = Array{T}(undef, length(τs), max_num_of_cycles)
+    ε★s = Array{T}(undef, length(τs), max_cycles)
 
     # loop over increasing embedding dimensions until some break criterion will
     # tell the loop to stop/break
@@ -102,14 +105,14 @@ function pecuzal_embedding(s::Vector{T}; τs = 0:50 , w::Int = 1,
         Y_act = pecuzal_embedding_cycle!(
                 Y_act, flag, s, τs, w, counter, ε★s, τ_vals, metric,
                 Ls, ts_vals, samplesize, K, α, p, Tw, KNN)
-        flag = pecuzal_break_criterion(Ls, counter, max_num_of_cycles)
+        flag = pecuzal_break_criterion(Ls, counter, max_cycles, L_init)
         counter += 1
     end
     # construct final reconstruction vector
     NN = (length(s)-sum(τ_vals[1:counter-1]))
-    Y_final = s
+    Y_final = s_orig
     for i = 2:length(τ_vals[1:counter-1])
-        Y_final = DelayEmbeddings.hcat_lagged_values(Y_final,s,τ_vals[i])
+        Y_final = DelayEmbeddings.hcat_lagged_values(Y_final,s_orig,τ_vals[i])
     end
     return Y_final, τ_vals[1:end-1], ts_vals[1:end-1], Ls, ε★s[:,1:counter-1]
 
@@ -118,13 +121,19 @@ end
 function pecuzal_embedding(Y::Dataset{D, T}; τs = 0:50 , w::Int = 1,
     samplesize::Real = 1, K::Int = 13, KNN::Int = 3, Tw::Int=4*w,
     metric = Euclidean(), α::Real = 0.05, p::Real = 0.5,
-    max_num_of_cycles = 50) where {D, T<:Real}
+    max_cycles = 50) where {D, T<:Real}
 
     @assert 0 < samplesize ≤ 1 "Please select a valid `samplesize`, which denotes a fraction of considered fiducial points, i.e. `samplesize` ∈ (0 1]"
     @assert all(x -> x ≥ 0, τs)
-
-    # centralize data
-    Y = regularize(Y)
+    Y_orig = Y
+    Y = regularize(Y) # especially important for comparative L-statistics
+    # compute initial L values for each time series
+    L_inits = zeros(size(Y,2))
+    for i = 1:size(Y,2)
+        L_inits[i] = uzal_cost(Dataset(Y[:,i]); samplesize = samplesize, K = KNN, metric = metric,
+                           w = w, Tw = Tw)
+    end
+    L_init = minimum(L_inits)
 
     # define actual phase space trajectory
     Y_act = []
@@ -137,7 +146,7 @@ function pecuzal_embedding(Y::Dataset{D, T}; τs = 0:50 , w::Int = 1,
     τ_vals = Int64[0]
     ts_vals = Int64[]
     Ls = Float64[]
-    ε★s = fill(zeros(T, length(τs), size(Y,2)), 1, max_num_of_cycles)
+    ε★s = fill(zeros(T, length(τs), size(Y,2)), 1, max_cycles)
 
     # loop over increasing embedding dimensions until some break criterion will
     # tell the loop to stop/break
@@ -146,26 +155,25 @@ function pecuzal_embedding(Y::Dataset{D, T}; τs = 0:50 , w::Int = 1,
                 Y_act, flag, Y, τs, w, counter, ε★s, τ_vals, metric,
                 Ls, ts_vals, samplesize, K, α, p, Tw, KNN)
 
-        flag = pecuzal_break_criterion(Ls, counter, max_num_of_cycles)
+        flag = pecuzal_break_criterion(Ls, counter, max_cycles, L_init)
         counter += 1
     end
-
     # construct final reconstruction vector
-    Y_final = Y[:,ts_vals[1]]
+    Y_final = Y_orig[:,ts_vals[1]]
     for i = 2:length(τ_vals[1:counter-1])
-        Y_final = DelayEmbeddings.hcat_lagged_values(Y_final,Y[:,ts_vals[i]],τ_vals[i])
+        Y_final = DelayEmbeddings.hcat_lagged_values(Y_final,Y_orig[:,ts_vals[i]],τ_vals[i])
     end
 
-    return Y_final, τ_vals[1:end-1], ts_vals[1:end-1], Ls, ε★s[:,1:counter-1]
+    return Y_final, τ_vals[1:end-1], ts_vals[1:end-1], Ls, ε★s[:,1:counter-1], epsis
 
 end
 
 
 """
-Perform one embedding cycle on `Y`
+Perform one univariate embedding cycle on `Y_act`. Return the new `Y_act`
 """
 function pecuzal_embedding_cycle!(
-        Y, flag, s, τs, w, counter, ε★s, τ_vals, metric,
+        Y_act, flag, s, τs, w, counter, ε★s, τ_vals, metric,
         Ls, ts_vals, samplesize, K, α, p, Tw, KNN)
 
     ε★, _ = pecora(s, Tuple(τ_vals), Tuple(ts_vals); delays = τs, w = w,
@@ -176,7 +184,7 @@ function pecuzal_embedding_cycle!(
     # zero-padding of ⟨ε★⟩ in order to also cover τ=0 (important for the multivariate case)
     ε★ = vec([0; ε★])
     # get the L-statistic for each peak in ⟨ε★⟩ and take the one according to L_min
-    L_trials, max_idx = local_L_statistics(ε★, Y, s, τs, Tw, KNN, w, samplesize, metric)
+    L_trials, max_idx, _ = local_L_statistics(ε★, Y_act, s, τs, Tw, KNN, w, samplesize, metric)
     L_min, min_idx = findmin(L_trials)
 
     push!(τ_vals, τs[max_idx[min_idx]-1])
@@ -184,7 +192,7 @@ function pecuzal_embedding_cycle!(
     push!(Ls, L_min)
 
     # create phase space vector for this embedding cycle
-    Y_act = DelayEmbeddings.hcat_lagged_values(Y,s,τ_vals[counter+1])
+    Y_act = DelayEmbeddings.hcat_lagged_values(Y_act,s,τ_vals[counter+1])
 
     return Y_act
 end
@@ -193,55 +201,84 @@ end
 Perform one embedding cycle on `Y` with a multivariate set Ys
 """
 function pecuzal_multivariate_embedding_cycle!(
-        Y, flag, Ys, τs, w, counter, ε★s, τ_vals, metric,
+        Y_act, flag, Ys, τs, w, counter, ε★s, τ_vals, metric,
         Ls, ts_vals, samplesize, K, α, p, Tw, KNN)
 
     M = size(Ys,2)
-    # in the 1st cycle we have to check all (size(Y,2)^2 combinations
+    # in the 1st cycle we have to check all (size(Y,2)^2 combinations and pick
+    # the tau according to minimial ξ = (peak height * resulting L-statistic)
     if counter == 1
-        L_min = zeros(M)
-        L_min_idx = zeros(Int, M)
-        ε★ = zeros(length(τs), M*M)
-        idx = zeros(Int, M)
-        for ts = 1:M
-            ε★[:,1+(M*(ts-1)):M*ts], _ = pecora(Ys, (0,), (ts,); delays = τs,
-                        w = w, samplesize = samplesize, K = K, metric = metric,
-                        α = α, p = p, undersampling = false)
-            L_min[ts], L_min_idx[ts], idx[ts] = choose_right_embedding_params(
-                                            ε★[:,1+(M*(ts-1)):M*ts], Ys[:,ts],
-                                            Ys, τs, Tw, KNN, w, samplesize,
-                                            metric)
-        end
-        L_mini, min_idx = findmin(L_min)
-        # update τ_vals, ts_vals, Ls, ε★s
-        push!(τ_vals, τs[L_min_idx[min_idx]])
-        push!(ts_vals, min_idx)             # time series to start with
-        push!(ts_vals, idx[min_idx])        # result of 1st embedding cycle
-        push!(Ls, L_mini)
-        ε★s[counter] = ε★[:,1+(M*(ts_vals[1]-1)):M*ts_vals[1]]
-
-        # create phase space vector for this embedding cycle
-        Y_act = DelayEmbeddings.hcat_lagged_values(Ys[:,ts_vals[counter]],
-                                     Ys[:,ts_vals[counter+1]],τ_vals[counter+1])
-
-    # in all other cycles we just have to check (size(Y,2)) combinations
+        Y_act = first_embedding_cycle_pecuzal!(Ys, M, τs, w, samplesize, K,
+                                metric, α, p, Tw, KNN, τ_vals, ts_vals, Ls, ε★s)
+    # in all other cycles we just have to check (size(Y,2)) combinations and pick
+    # the tau according to minimal resulting L-statistic
     else
-        ε★, _ = pecora(Ys, Tuple(τ_vals), Tuple(ts_vals); delays = τs, w = w,
-                samplesize = samplesize, K = K, metric = metric, α = α,
-                p = p, undersampling = false)
-        # update τ_vals, ts_vals, Ls, ε★s
-        choose_right_embedding_params!(ε★, Y, Ys, τ_vals, ts_vals, Ls, ε★s,
-                                    counter, τs, Tw, KNN, w, samplesize, metric)
-        # create phase space vector for this embedding cycle
-        Y_act = DelayEmbeddings.hcat_lagged_values(Y, Ys[:, ts_vals[counter+1]],
-                                                            τ_vals[counter+1])
+        Y_act = embedding_cycle_pecuzal!(Y_act, Ys, counter, M, τs, w, samplesize,
+                            K, metric, α, p, Tw, KNN, τ_vals, ts_vals, Ls, ε★s)
     end
+    return Y_act
+end
+
+"""
+Perform the first embedding cycle of the multivariate embedding. Return the
+actual reconstruction vector `Y_act`.
+"""
+function first_embedding_cycle_pecuzal!(Ys, M, τs, w, samplesize, K,
+                        metric, α, p, Tw, KNN, τ_vals, ts_vals, Ls, ε★s)
+    counter = 1
+    L_min = zeros(M)
+    L_min_idx = zeros(Int, M)
+    ε★ = zeros(length(τs), M*M)
+    idx = zeros(Int, M)
+    ξ_min = zeros(M)
+    for ts = 1:M
+        ε★[:,1+(M*(ts-1)):M*ts], _ = pecora(Ys, (0,), (ts,); delays = τs,
+                    w = w, samplesize = samplesize, K = K, metric = metric,
+                    α = α, p = p, undersampling = false)
+        L_min[ts], L_min_idx[ts], idx[ts], ξ_min[ts] = choose_right_embedding_params(
+                                        ε★[:,1+(M*(ts-1)):M*ts], Ys[:,ts],
+                                        Ys, τs, Tw, KNN, w, samplesize,
+                                        metric)
+    end
+    ξ_mini, min_idx = findmin(ξ_min)
+    L_mini = L_min[min_idx]
+    # update τ_vals, ts_vals, Ls, ε★s
+    push!(τ_vals, τs[L_min_idx[min_idx]])
+    push!(ts_vals, min_idx)             # time series to start with
+    push!(ts_vals, idx[min_idx])        # result of 1st embedding cycle
+    push!(Ls, L_mini)
+    ε★s[counter] = ε★[:,1+(M*(ts_vals[1]-1)):M*ts_vals[1]]
+
+    # create phase space vector for this embedding cycle
+    Y_act = DelayEmbeddings.hcat_lagged_values(Ys[:,ts_vals[counter]],
+                                 Ys[:,ts_vals[counter+1]],τ_vals[counter+1])
 
     return Y_act
 end
 
 """
-Choose the minimum L and corresponding τ for each ε★-statistic
+Perform an embedding cycle of the multivariate embedding, but the first one.
+Return the actual reconstruction vector `Y_act`.
+"""
+function embedding_cycle_pecuzal!(Y_act, Ys, counter, M, τs, w, samplesize,
+                    K, metric, α, p, Tw, KNN, τ_vals, ts_vals, Ls, ε★s)
+
+    ε★, _ = pecora(Ys, Tuple(τ_vals), Tuple(ts_vals); delays = τs, w = w,
+            samplesize = samplesize, K = K, metric = metric, α = α,
+            p = p, undersampling = false)
+    # update τ_vals, ts_vals, Ls, ε★s
+    choose_right_embedding_params!(ε★, Y_act, Ys, τ_vals, ts_vals, Ls, ε★s,
+                                counter, τs, Tw, KNN, w, samplesize, metric)
+    # create phase space vector for this embedding cycle
+    Y_act = DelayEmbeddings.hcat_lagged_values(Y_act, Ys[:, ts_vals[counter+1]],
+                                                        τ_vals[counter+1])
+    return Y_act
+end
+
+
+"""
+    Choose the minimum L and corresponding τ for each ε★-statistic, based on
+picking the peak in ε★, which corresponds to the minimal `L`-statistic.
 """
 function choose_right_embedding_params!(ε★, Y, Ys, τ_vals, ts_vals, Ls, ε★s,
                                  counter, τs, Tw, KNN, w, samplesize, metric)
@@ -250,7 +287,7 @@ function choose_right_embedding_params!(ε★, Y, Ys, τ_vals, ts_vals, Ls, ε�
     for ts = 1:size(Ys,2)
         # zero-padding of ⟨ε★⟩ in order to also cover τ=0 (important for the multivariate case)
         # get the L-statistic for each peak in ⟨ε★⟩ and take the one according to L_min
-        L_trials_, max_idx_ = local_L_statistics(vec([0; ε★[:,ts]]), Y, Ys[:,ts],
+        L_trials_, max_idx_, _ = local_L_statistics(vec([0; ε★[:,ts]]), Y, Ys[:,ts],
                                         τs, Tw, KNN, w, samplesize, metric)
         L_min_[ts], min_idx_ = findmin(L_trials_)
         τ_idx[ts] = max_idx_[min_idx_]-1
@@ -264,41 +301,60 @@ function choose_right_embedding_params!(ε★, Y, Ys, τ_vals, ts_vals, Ls, ε�
     ε★s[counter] = ε★
 end
 
+"""
+    Choose the right embedding parameters of the ε★-statistic in the first
+embedding cycle. Return the `L`-value, the corresponding index value of the
+chosen peak `τ_idx` and the number of the chosen time series to start with `idx`.
+Here the peak is chosen not on the basis of minimal `L`, as in all consecutive
+embedding cycles, but on the basis of minimal `ξ` = (peak height * resulting
+`L`-statistic), which is the last output variable.
+"""
 function choose_right_embedding_params(ε★, Y, Ys, τs, Tw, KNN, w, samplesize, metric)
+    ξ_min_ = zeros(size(Ys,2))
     L_min_ = zeros(size(Ys,2))
     τ_idx = zeros(Int,size(Ys,2))
     for ts = 1:size(Ys,2)
         # zero-padding of ⟨ε★⟩ in order to also cover τ=0 (important for the multivariate case)
         # get the L-statistic for each peak in ⟨ε★⟩ and take the one according to L_min
-        L_trials_, max_idx_ = local_L_statistics(vec([0; ε★[:,ts]]), Y, Ys[:,ts],
+        L_trials_, max_idx_, ξ_trials_ = local_L_statistics(vec([0; ε★[:,ts]]), Y, Ys[:,ts],
                                         τs, Tw, KNN, w, samplesize, metric)
-        L_min_[ts], min_idx_ = findmin(L_trials_)
+        ξ_min_[ts], min_idx_ = findmin(ξ_trials_)
+        L_min_[ts] = L_trials_[min_idx_]
         τ_idx[ts] = max_idx_[min_idx_]-1
     end
-    idx = sortperm(L_min_)
-    return L_min_[idx[1]], τ_idx[idx[1]], idx[1]
-
+    idx = sortperm(ξ_min_)
+    return L_min_[idx[1]], τ_idx[idx[1]], idx[1], ξ_min_[idx[1]]
 end
 
 
 """
-Return the L-statistic `L` and indices `max_idx` for all local maxima in ε★
+Return the L-statistic `L` and indices `max_idx` and weighted peak height
+`ξ = peak-height * L` for all local maxima in ε★
 """
-function local_L_statistics(ε★, Y, s, τs, Tw, KNN, w, samplesize, metric)
-    max_idx = get_maxima(ε★) # determine local maxima in ⟨ε★⟩
+function local_L_statistics(ε★, Y_act, s, τs, Tw, KNN, w, samplesize, metric)
+    maxima, max_idx = get_maxima(ε★) # determine local maxima in ⟨ε★⟩
     L_trials = zeros(Float64, length(max_idx))
+    ξ_trials = zeros(Float64, length(max_idx))
     for (i,τ_idx) in enumerate(max_idx)
         # create candidate phase space vector for this peak/τ-value
-        Y_trial = DelayEmbeddings.hcat_lagged_values(Y,s,τs[τ_idx-1])
+        Y_trial = DelayEmbeddings.hcat_lagged_values(Y_act,s,τs[τ_idx-1])
         # compute L-statistic
         L_trials[i] = uzal_cost(Y_trial; Tw = Tw, K = KNN, w = w,
                 samplesize = samplesize, metric = metric)
+        ξ_trials[i] = L_trials[i]*maxima[i]
     end
-    return L_trials, max_idx
+    return L_trials, max_idx, ξ_trials
 end
 
-function pecuzal_break_criterion(Ls, counter, max_num_of_cycles)
+function pecuzal_break_criterion(Ls, counter, max_num_of_cycles, L_init)
     flag = true
+    if counter == 1
+        if Ls[end] > L_init
+            println("Algorithm stopped due to increasing L-values. "*
+                    "Valid embedding NOT achieved ⨉.")
+            flag = false
+        end
+    end
     if counter > 1 && Ls[end]>Ls[end-1]
         println("Algorithm stopped due to minimum L-value reached. "*
                 "VALID embedding achieved ✓.")
@@ -314,23 +370,26 @@ end
 
 
 """
-Return the maxima of the given time series s
+Return the maxima of the given time series s and its indices
 """
 function get_maxima(s::Vector{T}) where {T}
-    maximas = Int[]
+    maximas = T[]
+    maximas_idx = Int[]
     N = length(s)
     flag = false
     first_point = 0
     for i = 2:N-1
         if s[i-1] < s[i] && s[i+1] < s[i]
             flag = false
-            push!(maximas, i)
+            push!(maximas, s[i])
+            push!(maximas_idx, i)
         end
         # handling constant values
         if flag
             if s[i+1] < s[first_point]
                 flag = false
-                push!(maximas, first_point)
+                push!(maximas, s[first_point])
+                push!(maximas_idx, first_point)
             elseif s[i+1] > s[first_point]
                 flag = false
             end
@@ -342,7 +401,7 @@ function get_maxima(s::Vector{T}) where {T}
     end
     # make sure there is no empty vector returned
     if isempty(maximas)
-        _, maximas = findmax(s)
+        maximas, maximas_idx = findmax(s)
     end
-    return maximas
+    return maximas, maximas_idx
 end

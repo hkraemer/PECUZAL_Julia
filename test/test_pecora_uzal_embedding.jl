@@ -1,6 +1,3 @@
-using DrWatson
-@quickactivate "new-embedding-methods"
-
 using DelayEmbeddings
 using DynamicalSystemsBase
 using Test
@@ -53,19 +50,22 @@ end
     w3 = estimate_delay(tr[:,3], "mi_min")
     w = w1
     Tmax = 100
-    K = 14
     samplesize = 1
 
-    @time Y, τ_vals, ts_vals, Ls , ε★, epsis = pecuzal_embedding(tr[1:3000,:];
+    @time Y, τ_vals, ts_vals, Ls , ε★ = pecuzal_embedding(tr[1:5000,:];
                                         τs = 0:Tmax , w = w, samplesize = samplesize)
 
-    @test length(ts_vals) == 3
-    @test ts_vals[2] == ts_vals[3] == 1
-    @test ts_vals[1] == 3
-    @test τ_vals[2] == 40
-    @test τ_vals[3] == 9
-    @test -2.13 < Ls[1] < -2.12
-    @test -2.33 < Ls[2] < -2.32
+
+    @test length(ts_vals) == 4
+    @test ts_vals[3] == ts_vals[4] == 1
+    @test ts_vals[1] == 2
+    @test ts_vals[2] == 3
+    @test τ_vals[2] == 0
+    @test τ_vals[3] == 62
+    @test τ_vals[4] == 0
+    @test -2.19 < Ls[1] < -2.18
+    @test -2.49 < Ls[2] < -2.48
+    @test -2.57 < Ls[3] < -2.56
 
     # Dummy input
     d1 = randn(1000)
@@ -78,6 +78,8 @@ end
 
     @time Y, τ_vals, ts_vals, Ls , ε★ = pecuzal_embedding(dummy_set;
                                         τs = 0:Tmax , w = w, samplesize = samplesize)
+
+    @test size(Y,2) == 1
 end
 
 end

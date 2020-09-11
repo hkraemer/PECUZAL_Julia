@@ -1,6 +1,3 @@
-# using DrWatson
-# @quickactivate "new-embedding-methods"
-
 using DelayEmbeddings
 using DynamicalSystemsBase
 using Random
@@ -164,7 +161,7 @@ function pecuzal_embedding(Y::Dataset{D, T}; τs = 0:50 , w::Int = 1,
         Y_final = DelayEmbeddings.hcat_lagged_values(Y_final,Y_orig[:,ts_vals[i]],τ_vals[i])
     end
 
-    return Y_final, τ_vals[1:end-1], ts_vals[1:end-1], Ls, ε★s[:,1:counter-1], epsis
+    return Y_final, τ_vals[1:end-1], ts_vals[1:end-1], Ls, ε★s[:,1:counter-1]
 
 end
 

@@ -1,6 +1,6 @@
-# using DrWatson
-# @quickactivate "new-embedding-methods"
-#
+using DrWatson
+@quickactivate "new-embedding-methods"
+
 using DelimitedFiles, PyPlot
 pygui(true)
 
@@ -44,10 +44,11 @@ merge!(rcParams, font0)
 
 # 1 Dependence on KNN
 
-Ks = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_K_Ks.csv")
-sizes = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_K_sizes.csv")
-Ls = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_K_Ls.csv")
-τ_vals = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_K_tau_vals.csv")
+Ks = readdlm("./scripts/computed data/dependence_on_K_Ks.csv")
+sizes = readdlm("./scripts/computed data/dependence_on_K_sizes.csv")
+Ls = readdlm("./scripts/computed data/dependence_on_K_Ls.csv")
+τ_vals = readdlm("./scripts/computed data/dependence_on_K_tau_vals.csv")
+τ_vals = Int.(τ_vals)
 
 ax = fig.add_subplot(5, 2, 1)
 p1 = plot(Ks, Ls[:,1], label="1st embedding cylce", linewidth=lwg)
@@ -82,10 +83,11 @@ grid()
 
 # 2) Dependence on δ-Neighborhood size
 
-deltas = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_delta_neighborhood_Ks.csv")
-sizes = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_delta_neighborhood_sizes.csv")
-Ls = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_delta_neighborhood_Ls.csv")
-τ_vals = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_delta_neighborhood_tau_vals.csv")
+deltas = readdlm("./scripts/computed data/dependence_on_delta_neighborhood_Ks.csv")
+sizes = readdlm("./scripts/computed data/dependence_on_delta_neighborhood_sizes.csv")
+Ls = readdlm("./scripts/computed data/dependence_on_delta_neighborhood_Ls.csv")
+τ_vals = readdlm("./scripts/computed data/dependence_on_delta_neighborhood_tau_vals.csv")
+τ_vals = Int.(τ_vals)
 
 ax = fig.add_subplot(5, 2, 3)
 p1 = plot(deltas, Ls[:,1], label="1st embedding cylce", linewidth=lwg)
@@ -120,11 +122,12 @@ grid()
 
 # 3) Dependence on p
 
-ps = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_p_ps.csv")
-sizes = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_p_sizes.csv")
-Ls = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_p_Ls.csv")
-τ_vals = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_p_tau_vals.csv")
-εs = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_p_epsilons.csv")
+ps = readdlm("./scripts/computed data/dependence_on_p_ps.csv")
+sizes = readdlm("./scripts/computed data/dependence_on_p_sizes.csv")
+Ls = readdlm("./scripts/computed data/dependence_on_p_Ls.csv")
+τ_vals = readdlm("./scripts/computed data/dependence_on_p_tau_vals.csv")
+τ_vals = Int.(τ_vals)
+εs = readdlm("./scripts/computed data/dependence_on_p_epsilons.csv")
 
 
 ax = fig.add_subplot(5, 2, 5)
@@ -161,11 +164,12 @@ grid()
 
 # 4) Dependence on α
 
-alphas = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_alpha_alphas.csv")
-sizes = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_alpha_sizes.csv")
-Ls = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_alpha_Ls.csv")
-τ_vals = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_alpha_tau_vals.csv")
-εs = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_alpha_epsilons.csv")
+alphas = readdlm("./scripts/computed data/dependence_on_alpha_alphas.csv")
+sizes = readdlm("./scripts/computed data/dependence_on_alpha_sizes.csv")
+Ls = readdlm("./scripts/computed data/dependence_on_alpha_Ls.csv")
+τ_vals = readdlm("./scripts/computed data/dependence_on_alpha_tau_vals.csv")
+τ_vals = Int.(τ_vals)
+εs = readdlm("./scripts/computed data/dependence_on_alpha_epsilons.csv")
 
 
 ax = fig.add_subplot(5, 2, 7)
@@ -203,10 +207,10 @@ grid()
 
 # 5) Dependence on Tw
 
-Tws = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_Tw_Tws.csv")
-sizes = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_Tw_sizes.csv")
-Ls = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_Tw_Ls.csv")
-τ_vals = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_Tw_tau_vals.csv")
+Tws = readdlm("./scripts/computed data/dependence_on_Tw_Tws.csv")
+sizes = readdlm("./scripts/computed data/dependence_on_Tw_sizes.csv")
+Ls = readdlm("./scripts/computed data/dependence_on_Tw_Ls.csv")
+τ_vals = readdlm("./scripts/computed data/dependence_on_Tw_tau_vals.csv")
 
 τ_vals[1,3]=NaN64
 τ_vals[2,3]=NaN64
@@ -251,11 +255,12 @@ grid()
 
 ## Figure for ε*-statistics with varying p
 
-ps = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_p_ps.csv")
-sizes = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_p_sizes.csv")
-Ls = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_p_Ls.csv")
-τ_vals = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_p_tau_vals.csv")
-εs = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_p_epsilons.csv")
+ps = readdlm("./scripts/computed data/dependence_on_p_ps.csv")
+sizes = readdlm("./scripts/computed data/dependence_on_p_sizes.csv")
+Ls = readdlm("./scripts/computed data/dependence_on_p_Ls.csv")
+τ_vals = readdlm("./scripts/computed data/dependence_on_p_tau_vals.csv")
+τ_vals = Int.(τ_vals)
+εs = readdlm("./scripts/computed data/dependence_on_p_epsilons.csv")
 
 Tmax=100
 taus = vec(0:Tmax)
@@ -268,8 +273,6 @@ for j = 1:6
         end
 end
 εs=εs_
-
-
 
 panelnames = ["A" "B" "C" "D" "E" "F"]
 titlenames = ["p=0.6" "p=0.5" "p=0.4" "p=0.3" "p=0.2" "p=0.1"]
@@ -330,11 +333,12 @@ end
 
 ## Figure for ε*-statistics with varying α
 
-alphas = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_alpha_alphas.csv")
-sizes = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_alpha_sizes.csv")
-Ls = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_alpha_Ls.csv")
-τ_vals = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_alpha_tau_vals.csv")
-εs = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_alpha_epsilons.csv")
+alphas = readdlm("./scripts/computed data/dependence_on_alpha_alphas.csv")
+sizes = readdlm("./scripts/computed data/dependence_on_alpha_sizes.csv")
+Ls = readdlm("./scripts/computed data/dependence_on_alpha_Ls.csv")
+τ_vals = readdlm("./scripts/computed data/dependence_on_alpha_tau_vals.csv")
+τ_vals = Int.(τ_vals)
+εs = readdlm("./scripts/computed data/dependence_on_alpha_epsilons.csv")
 
 
 Tmax=100

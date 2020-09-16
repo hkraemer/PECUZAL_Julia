@@ -1,3 +1,6 @@
+using DrWatson
+@quickactivate "new-embedding-methods"
+
 using DelayEmbeddings
 using DynamicalSystemsBase
 using Random

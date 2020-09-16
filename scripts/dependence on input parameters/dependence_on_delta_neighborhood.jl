@@ -7,21 +7,24 @@ using Random
 using Test
 using DelimitedFiles
 
-include("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/src/pecora_uzal_method.jl")
+include("../../src/pecora_uzal_method.jl")
 
 ## In this script we evaluate the dependence of the returned reconstruction
-# parameters on the time horizon Tw, needed for the computation of the
-# L-statistic
+# parameters on the parameter determining the δ-neighborhood, needed for the
+# computation of the continuity-statistic
 
-## Dependence on Tw
+## Dependence on δ-neighborhood
 # For comparison reasons using Travis CI we carry out the integration on a UNIX
 # OS and save the resulting time series
 # lo = Systems.lorenz([1.0, 1.0, 50.0])
 # tr = trajectory(lo, 100; dt = 0.01, Ttr = 10)
-# x = tr[:, 1]
-# writedlm("lorenz_uzal_2.csv", x)
+# x = tr[:, 1] # x-component of time series
+# y = tr[:, 2] #y-component of time series
+# writedlm("./test/timeseries/lorenz_pecora_uni_x.csv", x)
+# writedlm("./test/timeseries/lorenz_pecora_uni_y.csv", y)
+# writedlm("./test/timeseries/lorenz_pecora_multi.csv", tr)
 
-s = readdlm("lorenz_uzal_2.csv")
+s = readdlm("./test/timeseries/lorenz_pecora_uni_x.csv")
 s = vec(s[1:5000]) # input timeseries = x component of lorenz
 w = estimate_delay(s, "mi_min")
 Tmax = 100
@@ -35,7 +38,7 @@ Ls = []
 sizes = []
 for K in Ks
     display(K)
-    YY, τ_valss, _, Lss , _ = pecora_uzal_embedding(s;
+    YY, τ_valss, _, Lss , _ = pecuzal_embedding(s;
                                 τs = 0:Tmax , w = w, samplesize = samplesize,
                                 K = K, KNN = KNN, Tw = Tw)
     push!(sizes,size(YY,2))
@@ -43,17 +46,17 @@ for K in Ks
     push!(Ls, Lss)
 end
 
-# writedlm("dependence_on_delta_neighborhood_Ks.csv",Ks)
-# writedlm("dependence_on_delta_neighborhood_sizes.csv",sizes)
-# writedlm("dependence_on_delta_neighborhood_Ls.csv",Ls)
-# writedlm("dependence_on_delta_neighborhood_tau_vals.csv",τ_vals)
+writedlm("./scripts/computed data/dependence_on_delta_neighborhood_Ks.csv",Ks)
+writedlm("./scripts/computed data/dependence_on_delta_neighborhood_sizes.csv",sizes)
+writedlm("./scripts/computed data/dependence_on_delta_neighborhood_Ls.csv",Ls)
+writedlm("./scripts/computed data/dependence_on_delta_neighborhood_tau_vals.csv",τ_vals)
 
 ## Plot results
 
-deltas = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_delta_neighborhood_Ks.csv")
-sizes = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_delta_neighborhood_sizes.csv")
-Ls = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_delta_neighborhood_Ls.csv")
-τ_vals = readdlm("/Users/hkraemer/Documents/Git/new-embedding-methods/new-embedding-methods/scripts/computed data/dependence_on_delta_neighborhood_tau_vals.csv")
+deltas = readdlm("./scripts/computed data/dependence_on_delta_neighborhood_Ks.csv")
+sizes = readdlm("./scripts/computed data/dependence_on_delta_neighborhood_sizes.csv")
+Ls = readdlm("./scripts/computed data/dependence_on_delta_neighborhood_Ls.csv")
+τ_vals = readdlm("./scripts/computed data/dependence_on_delta_neighborhood_tau_vals.csv")
 
 
 using PyPlot

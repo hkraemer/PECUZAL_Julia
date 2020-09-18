@@ -4,6 +4,8 @@ using DrWatson
 using DynamicalSystems
 using RecurrenceAnalysis
 using DelayEmbeddings
+using Distances
+using Statistics
 
 
 """
@@ -15,19 +17,17 @@ compute the recurrence time entropy of the recurrence plots of `Y₁`, `Y₂`, `
 `Y₄` and `Y_ref`.
 
 Keyword arguments:
-*`ε = 0.05`: The used threshold for constructing the recurrence plots.
-           The reconstruction method is fixed recurrence rate.
-*`w_ref = 1`: Theiler window for the Dataset corresponding to `Y_ref`.
-*`w₁ = 1`: Theiler window for the Dataset corresponding to `Y₁`.
-*`w₂ = 1`: Theiler window for the Dataset corresponding to `Y₂`.
-*`w₃ = 1`: Theiler window for the Dataset corresponding to `Y₃`.
-*`w₄ = 1`: Theiler window for the Dataset corresponding to `Y₄`.
+*`ε = 0.05`: The used threshold for constructing the recurrence plots
+    The reconstruction method is fixed recurrence rate.
+*`w = 1`: Theiler window used for all Datasets
 *`lmin = 2`: Minimum used line length for digaonal line based RQA measures.
+*`kNN = 1`: The number of nearest neighbors used for obtaining the mutual
+    nearest neighbors measure
 """
 function perform_recurrence_analysis(Y_ref::Dataset, Y₁::Dataset,
                         Y₂::Dataset, Y₃::Dataset, Y₄::Dataset;
-                        ε::Real = 0.05, w_ref::Int = 1, w₁::Int = 1,  w₂::Int = 1,
-                        w₃::Int = 1, w₄::Int = 1, lmin::Int = 2)
+                        ε::Real = 0.05, w::Int = 1, lmin::Int = 2, kNN::Int = 1)
+
     N1 = length(Y₁)
     N2 = length(Y₂)
     N3 = length(Y₃)
@@ -45,13 +45,19 @@ function perform_recurrence_analysis(Y_ref::Dataset, Y₁::Dataset,
     f3 = jrp_rr_frac(R_ref, R3)
     f4 = jrp_rr_frac(R_ref, R4)
 
-    RQA_ref = rqa(R_ref; theiler = w_ref, lmin = lmin)
-    RQA1 = rqa(R1; theiler = w₁, lmin = lmin)
-    RQA2 = rqa(R2; theiler = w₂, lmin = lmin)
-    RQA3 = rqa(R3; theiler = w₃, lmin = lmin)
-    RQA4 = rqa(R4; theiler = w₄, lmin = lmin)
+    mfnn1 = mfnn(Y_ref[1:N,:], Y₁[1:N,:]; w = w, kNN = kNN)
+    mfnn2 = mfnn(Y_ref[1:N,:], Y₂[1:N,:]; w = w, kNN = kNN)
+    mfnn3 = mfnn(Y_ref[1:N,:], Y₃[1:N,:]; w = w, kNN = kNN)
+    mfnn4 = mfnn(Y_ref[1:N,:], Y₄[1:N,:]; w = w, kNN = kNN)
 
-    return f1, f2, f3, f4, RQA_ref, RQA1, RQA2, RQA3, RQA4
+    RQA_ref = rqa(R_ref; theiler = w, lmin = lmin)
+    RQA1 = rqa(R1; theiler = w, lmin = lmin)
+    RQA2 = rqa(R2; theiler = w, lmin = lmin)
+    RQA3 = rqa(R3; theiler = w, lmin = lmin)
+    RQA4 = rqa(R4; theiler = w, lmin = lmin)
+
+    return mfnn1, mfnn2, mfnn3, mfnn4, f1, f2, f3, f4, RQA_ref, RQA1, RQA2,
+                                            RQA3, RQA4, R_ref, R1, R2, R3, R4
 end
 
 
@@ -60,15 +66,28 @@ end
 Compute the reconstructed trajectory from a time series using the standard time
 delay embedding. The delay `τ` is taken as the 1st minimum of the mutual
 information [`estimate_dimension`](@ref) and the embedding dimension `m` is
-estimated by using an FNN method from [^Hegger1999] [`fnn_uniform_hegger`](@ref)
-with an optional keyword `fnn_thres = 0.05`, which defines at which fraction of
-FNNs the search should break.
+estimated by using an FNN method from [^Hegger1999] [`fnn_uniform_hegger`](@ref).
 Return the reconstructed trajectory `Y` and the delay `τ`.
+
+Keyword arguments:
+
+*`fnn_thres = 0.05`: a threshold defining at which fraction of FNNs the search
+    should break.
+* The `method` can be one of the following:
+* `"ac_zero"` : first delay at which the auto-correlation function becomes <0.
+* `"ac_min"` : delay of first minimum of the auto-correlation function.
+* `"mi_min"` : delay of first minimum of mutual information of `s` with itself
+  (shifted for various `τs`). <- Default
 
 [^Hegger1999]: Hegger, Rainer and Kantz, Holger (1999). [Improved false nearest neighbor method to detect determinism in time series data. Physical Review E 60, 4970](https://doi.org/10.1103/PhysRevE.60.4970).
 """
-function standard_embedding_hegger(s::Vector{T}; fnn_thres::Real = 0.05) where {T}
-    τ = estimate_delay(s, "mi_min")
+function standard_embedding_hegger(s::Vector{T}; method::String = "mi_min",
+                                            fnn_thres::Real = 0.05) where {T}
+    @assert method=="ac_zero" || method=="mi_min" || method=="ac_min"
+    "The absolute correlation function has elements that are = 0. "*
+    "We can't fit an exponential to it. Please choose another method."
+
+    τ = estimate_delay(s, method)
     _, _, Y = fnn_uniform_hegger(s, τ; fnn_thres = fnn_thres)
     return Y, τ
 end
@@ -88,11 +107,21 @@ Keyword arguments:
     proposed statistic from the optimal value of 1, for breaking the algorithm.
 *`m_max = 10`: The maximum embedding dimension, which is encountered by the
     algorithm.
+* The `method` can be one of the following:
+* `"ac_zero"` : first delay at which the auto-correlation function becomes <0.
+* `"ac_min"` : delay of first minimum of the auto-correlation function.
+* `"mi_min"` : delay of first minimum of mutual information of `s` with itself
+  (shifted for various `τs`). <- Default
 
 [^Hegger1999]: Hegger, Rainer and Kantz, Holger (1999). [Improved false nearest neighbor method to detect determinism in time series data. Physical Review E 60, 4970](https://doi.org/10.1103/PhysRevE.60.4970).
 """
-function standard_embedding_cao(s::Vector{T}; cao_thres::Real = 0.05, m_max::Int = 10) where {T}
-    τ = estimate_delay(s, "mi_min")
+function standard_embedding_cao(s::Vector{T}; cao_thres::Real = 0.05,
+                        method::String = "mi_min", m_max::Int = 10) where {T}
+    @assert method=="ac_zero" || method=="mi_min" || method=="ac_min"
+    "The absolute correlation function has elements that are = 0. "*
+    "We can't fit an exponential to it. Please choose another method."
+
+    τ = estimate_delay(s, method)
     rat = estimate_dimension(s, τ, 1:m_max, "afnn")
     for i = 1:m_max
         if abs(1-rat[i]) < cao_thres
@@ -203,6 +232,77 @@ function jrp_rr_frac(RP₁::RecurrenceMatrix, RP₂::RecurrenceMatrix)
     f = RR2 / RR1
     return f
 end
+
+"""
+Computes the mututal false nearest neighbours (mfnn) for a reference trajectory
+`Y_ref` and a reconstruction `Y_rec` after [^Rulkov1995].
+
+Keyword arguments:
+
+*`w = 1`: Theiler window for the surpression of serially correlated neighbors in
+    the nearest neighbor-search
+*`kNN = 1`: The number of considered nearest neighbours (in the paper always 1)
+
+[^Rulkov1995]: Rulkov, Nikolai F. and Sushchik, Mikhail M. and Tsimring, Lev S. and Abarbanel, Henry D.I. (1995). [Generalized synchronization of chaos in directionally coupled chaotic systems. Physical Review E 51, 980](https://doi.org/10.1103/PhysRevE.51.980).
+"""
+function mfnn(Y_ref::Dataset, Y_rec::Dataset; w::Int = 1, kNN::Int = 1)
+
+    @assert length(Y_ref) == length(Y_rec)
+    @assert kNN > 0
+    N = length(Y_ref)
+    metric = Euclidean()
+
+    # compute nearest neighbor distances for both trajectories
+    vtree = KDTree(Y_ref, metric)
+    allNNidxs_ref, _ = DelayEmbeddings.all_neighbors(vtree, Y_ref,
+                                                        1:length(Y_ref), kNN, w)
+    vtree = KDTree(Y_rec, metric)
+    allNNidxs_rec, _ = DelayEmbeddings.all_neighbors(vtree, Y_rec,
+                                                        1:length(Y_rec), kNN, w)
+
+    F = zeros(N)
+    factor1_nom = zeros(kNN)
+    factor1_denom = zeros(kNN)
+    factor2_nom = zeros(kNN)
+    factor2_denom = zeros(kNN)
+    for i = 1:N
+        for j = 1:kNN
+            factor1_nom[j] = evaluate(Euclidean(), Y_rec[i], Y_rec[allNNidxs_ref[i][j]])
+            factor1_denom[j] = evaluate(Euclidean(), Y_ref[i], Y_ref[allNNidxs_ref[i][j]])
+            factor2_nom[j] = evaluate(Euclidean(), Y_ref[i], Y_ref[allNNidxs_rec[i][j]])
+            factor2_denom[j] = evaluate(Euclidean(), Y_rec[i], Y_rec[allNNidxs_rec[i][j]])
+        end
+        factor1 = sum(factor1_nom)/sum(factor1_denom)
+        factor2 = sum(factor2_nom)/sum(factor2_denom)
+        F[i] = factor1*factor2                                         # Eq.(27)
+    end
+    return mean(F)
+end
+# function mfnn(Y_ref::Dataset, Y_rec::Dataset; w::Int = 1, kNN::Int = 1)
+#
+#     @assert length(Y_ref) == length(Y_rec)
+#     @assert kNN > 0
+#     N = length(Y_ref)
+#     metric = Euclidean()
+#
+#     # compute nearest neighbor distances for both trajectories
+#     vtree = KDTree(Y_ref, metric)
+#     allNNidxs_ref, _ = DelayEmbeddings.all_neighbors(vtree, Y_ref,
+#                                                         1:length(Y_ref), kNN, w)
+#     vtree = KDTree(Y_rec, metric)
+#     allNNidxs_rec, _ = DelayEmbeddings.all_neighbors(vtree, Y_rec,
+#                                                         1:length(Y_rec), kNN, w)
+#
+#     F = zeros(N)
+#     for i = 1:N
+#         factor1 = evaluate(Euclidean(), Y_rec[i], Y_rec[allNNidxs_ref[i][1]])/
+#                   evaluate(Euclidean(), Y_ref[i], Y_ref[allNNidxs_ref[i][1]])
+#         factor2 = evaluate(Euclidean(), Y_ref[i], Y_ref[allNNidxs_rec[i][1]])/
+#                   evaluate(Euclidean(), Y_rec[i], Y_rec[allNNidxs_rec[i][1]])
+#         F[i] = factor1*factor2                                         # Eq.(27)
+#     end
+#     return mean(F)
+# end
 
 
 """

@@ -18,24 +18,53 @@ include("../../src/data_analysis_functions.jl")
 # recurrence time entropy, since it is related to the Kolmogorov-entropy as a
 # dynamical invariant.
 
-# Here we look at a chaotic system: The Roessler attractor in the funnel regime
+# Here we look at a limit cycle example: the Duffing oscillator
 
 ## Integrate system and determine theiler window
 
-roe = Systems.roessler()
-
 # set time interval for integration
 N = 5000 # number of samples
-dt_tra = 0.05
+dt_tra = 0.3
 t = 0:dt_tra:(dt_tra*N)
 
-tr = trajectory(roe, (N*dt_tra); dt = dt_tra, Ttr = (2000*dt_tra))
+
+function duffing!(du,u,p,t)
+    x,y,z = u
+    δ,α,β,γ,ω = p
+
+    du[1] = y # dx
+    du[2] = -δ*y - α*x - β*x^3 + z #dy
+    du[3] = γ*ω*cos(ω*t)# dz
+end
+
+
+# set parameters for chaotic Duffing system
+δ = .3
+α = -1
+β = 1
+γ = .51
+ω = 1.2
+p = [δ,α,β,γ,ω]
+
+# random initial condition
+u0 = [.4*rand(1); .5*rand(1); .2*rand(1)]
+
+# construct a ContinuousDynamicalSystem
+duffing_system = ContinuousDynamicalSystem(duffing!, u0, p)
+# solve ODEproblem / get trajectory
+tr = trajectory(duffing_system, (N*dt_tra); dt = dt_tra, Ttr = (5000*dt_tra))
 tr = regularize(tr)
 
-w1 = estimate_delay(tr[:,1], "mi_min")
-w2 = estimate_delay(tr[:,2], "mi_min")
+σ = 0
+tra = zeros(size(tr))
+tra[:,1] = tr[:,1] .+ σ*randn(size(tra,1))
+tra[:,2] = tr[:,2] .+ σ*randn(size(tra,1))
+tra[:,3] = tr[:,3] .+ σ*randn(size(tra,1))
+tr = Dataset(tra)
 
-w = maximum(hcat(w1,w2))
+w1 = estimate_delay(tr[:,1], "mi_min")
+
+w = w1
 taus = 0:100
 
 ## Perform reconstructions and compute according L-value
@@ -44,24 +73,14 @@ taus = 0:100
 L_ref = uzal_cost(tr, Tw = (4*w), w = w, samplesize=1)
 
 #Standard TDE
-@time Y_tde, _ = standard_embedding_cao(tr[:,2])
+@time Y_tde, _ = standard_embedding_cao(tr[:,1])
 L_tde = uzal_cost(Y_tde, Tw = (4*w), w = w, samplesize=1)
-
 
 #MDOP embedding
 println("Computation time MDOP:")
 @time begin
-    tw1 = mdop_maximum_delay(tr[:,1])
-    tw2 = mdop_maximum_delay(tr[:,2])
-    lm1 = DelayEmbeddings.findlocalminima(tw1[2])
-    if lm1[1] ≤ 2
-        lmm1 = try lm1[2]
-        catch
-            lm1[1]
-        end
-    else
-        lmm1 = lm1[1]
-    end
+    tw2 = mdop_maximum_delay(tr[:,1])
+
     lm2 = DelayEmbeddings.findlocalminima(tw2[2])
     if lm2[1] ≤ 2
         lmm2 = try lm2[2]
@@ -71,29 +90,27 @@ println("Computation time MDOP:")
     else
         lmm2 = lm2[1]
     end
-    tau_max = maximum(hcat(lmm1, lmm2))
+
+    tau_max = lmm2
+
     taus_mdop = 0:tau_max
 
-    Y_mdop, τ_vals_mdop, ts_vals_mdop, FNNs_mdop , βs_mdop = mdop_embedding(tr[:,1:2];
+    Y_mdop, τ_vals_mdop, ts_vals_mdop, FNNs_mdop , βs_mdop = mdop_embedding(tr[:,1];
                                                         τs = taus_mdop , w = w)
     L_mdop = uzal_cost(Y_mdop, Tw = (4*w), w = w, samplesize=1)
 end
 
 #Garcia & Almeida
 println("Computation time Garcia & Almeida method:")
-@time Y_GA, τ_vals_GA, ts_vals_GA, FNNs_GA , ns_GA = garcia_almeida_embedding(tr[:,1:2];
+@time Y_GA, τ_vals_GA, ts_vals_GA, FNNs_GA , ns_GA = garcia_almeida_embedding(tr[:,1];
                                                     τs = taus , w = w, T = w)
 L_GA = uzal_cost(Y_GA, Tw = (4*w), w = w, samplesize=1)
 
 #Pecuzal
 println("Computation time pecuzal method:")
-@time Y_pec, τ_vals_pec, ts_vals_pec, Ls_pec , εs_pec = pecuzal_embedding(tr[:,1:2];
+@time Y_pec, τ_vals_pec, ts_vals_pec, Ls_pec , εs_pec = pecuzal_embedding(tr[:,1];
                                                             τs = taus , w = w)
 L_pec = minimum(Ls_pec)
-
-@time Y_pec, τ_vals_pec, ts_vals_pec, Ls_pec , εs_pec = pecuzal_embedding(tr[:,1:2];
-                                                            τs = taus , w = w)
-
 
 ## compute other evaluation statistics
 
@@ -102,7 +119,7 @@ L_pec = minimum(Ls_pec)
         perform_recurrence_analysis(tr, Dataset(Y_tde), Dataset(Y_mdop),
                     Dataset(Y_GA), Dataset(Y_pec); ε = 0.08, w = w, kNN = 10)
 
-NN = 4900
+NN = 100
 figure()
 subplot(231)
 RR_ref = grayscale(R_ref[1:NN,1:NN])
@@ -125,21 +142,21 @@ RR4 = grayscale(R4[1:NN,1:NN])
 imshow(RR4, cmap = "binary_r", extent = (1, size(RR_ref)[1], 1, size(RR_ref)[2]))
 title("PECUZAL")
 
-figure()
-plot3D(tr[:,1], tr[:,2], tr[:,3])
-title("reference")
-figure()
-plot3D(Y_tde[:,1], Y_tde[:,2], Y_tde[:,3])
-title("TDE")
-figure()
-plot3D(Y_GA[:,1], Y_GA[:,2], Y_GA[:,3])
-title("GA")
-figure()
-plot3D(Y_mdop[:,1], Y_mdop[:,2], Y_mdop[:,3])
-title("MDOP")
-figure()
-plot3D(Y_pec[:,1], Y_pec[:,2], Y_pec[:,3])
-title("PECUZAL")
+# figure()
+# plot3D(tr[:,1], tr[:,2], tr[:,3])
+# title("reference")
+# figure()
+# plot3D(Y_tde[:,1], Y_tde[:,2], Y_tde[:,3])
+# title("TDE")
+# figure()
+# plot3D(Y_GA[:,1], Y_GA[:,2], Y_GA[:,3])
+# title("GA")
+# figure()
+# plot3D(Y_mdop[:,1], Y_mdop[:,2], Y_mdop[:,3])
+# title("MDOP")
+# figure()
+# plot3D(Y_pec[:,1], Y_pec[:,2], Y_pec[:,3])
+# title("PECUZAL")
 
 display("mfnn_tde: $mfnn1")
 display("mfnn_mdop: $mfnn2")

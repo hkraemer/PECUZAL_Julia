@@ -22,6 +22,53 @@ include("../../src/data_analysis_functions.jl")
 
 ## Integrate system and determine theiler window
 
+# # set time interval for integration
+# N = 5000 # number of samples
+# dt_tra = 0.02
+# tspan = (0.0, (dt_tra*N))
+#
+# function roessler!(du,u,p,t)
+#     x,y,z = u
+#     a,b,c = p
+#     du[1] = -(y+z) # dx
+#     du[2] = x + (a*y) # dy
+#     du[3] = b+z*(x-c) # dz
+# end
+#
+# function multiplicative_noise!(du,u,p,t)
+#     du[1] = .3 * u[1]
+#     du[2] = .3 * u[2]
+#     du[3] = du[3]
+# end
+#
+# a = .2
+# b = .2
+# c = 5.7
+# p = [a,b,c]
+#
+# function lorenz(du,u,p,t)
+#   du[1] = 10.0(u[2]-u[1])
+#   du[2] = u[1]*(28.0-u[3]) - u[2]
+#   du[3] = u[1]*u[2] - (8/3)*u[3]
+# end
+#
+# # random initial condition
+# u0 = [rand(1); rand(1); rand(1)]
+#
+# prob = SDEProblem(roessler!, multiplicative_noise!, u0, tspan, p)
+# sol = solve(prob)
+#
+# tr = zeros(N,3)
+# @inbounds for i = 1:N
+#     tr[i,1] = sol.u[i][1]
+#     tr[i,2] = sol.u[i][2]
+#     tr[i,3] = sol.u[i][3]
+# end
+#
+# figure()
+# plot3D(tr[:,1],tr[:,2],tr[:,3])
+
+# roe = Systems.roessler(a = a, b = b, c = c)
 roe = Systems.roessler()
 
 # set time interval for integration
@@ -32,11 +79,19 @@ t = 0:dt_tra:(dt_tra*N)
 tr = trajectory(roe, (N*dt_tra); dt = dt_tra, Ttr = (2000*dt_tra))
 tr = regularize(tr)
 
+σ = .1
+tra = zeros(size(tr))
+tra[:,1] = tr[:,1] .+ σ*randn(size(tra,1))
+tra[:,2] = tr[:,2] .+ σ*randn(size(tra,1))
+tra[:,3] = tr[:,3] .+ σ*randn(size(tra,1))
+tr = Dataset(tra)
+
 w1 = estimate_delay(tr[:,1], "mi_min")
 w2 = estimate_delay(tr[:,2], "mi_min")
 
 w = maximum(hcat(w1,w2))
 taus = 0:100
+
 
 ## Perform reconstructions and compute according L-value
 
@@ -46,7 +101,6 @@ L_ref = uzal_cost(tr, Tw = (4*w), w = w, samplesize=1)
 #Standard TDE
 @time Y_tde, _ = standard_embedding_cao(tr[:,2])
 L_tde = uzal_cost(Y_tde, Tw = (4*w), w = w, samplesize=1)
-
 
 #MDOP embedding
 println("Computation time MDOP:")
@@ -91,9 +145,6 @@ println("Computation time pecuzal method:")
                                                             τs = taus , w = w)
 L_pec = minimum(Ls_pec)
 
-@time Y_pec, τ_vals_pec, ts_vals_pec, Ls_pec , εs_pec = pecuzal_embedding(tr[:,1:2];
-                                                            τs = taus , w = w)
-
 
 ## compute other evaluation statistics
 
@@ -102,7 +153,7 @@ L_pec = minimum(Ls_pec)
         perform_recurrence_analysis(tr, Dataset(Y_tde), Dataset(Y_mdop),
                     Dataset(Y_GA), Dataset(Y_pec); ε = 0.08, w = w, kNN = 10)
 
-NN = 4900
+NN = 100
 figure()
 subplot(231)
 RR_ref = grayscale(R_ref[1:NN,1:NN])
@@ -125,21 +176,21 @@ RR4 = grayscale(R4[1:NN,1:NN])
 imshow(RR4, cmap = "binary_r", extent = (1, size(RR_ref)[1], 1, size(RR_ref)[2]))
 title("PECUZAL")
 
-figure()
-plot3D(tr[:,1], tr[:,2], tr[:,3])
-title("reference")
-figure()
-plot3D(Y_tde[:,1], Y_tde[:,2], Y_tde[:,3])
-title("TDE")
-figure()
-plot3D(Y_GA[:,1], Y_GA[:,2], Y_GA[:,3])
-title("GA")
-figure()
-plot3D(Y_mdop[:,1], Y_mdop[:,2], Y_mdop[:,3])
-title("MDOP")
-figure()
-plot3D(Y_pec[:,1], Y_pec[:,2], Y_pec[:,3])
-title("PECUZAL")
+# figure()
+# plot3D(tr[:,1], tr[:,2], tr[:,3])
+# title("reference")
+# figure()
+# plot3D(Y_tde[:,1], Y_tde[:,2], Y_tde[:,3])
+# title("TDE")
+# figure()
+# plot3D(Y_GA[:,1], Y_GA[:,2], Y_GA[:,3])
+# title("GA")
+# figure()
+# plot3D(Y_mdop[:,1], Y_mdop[:,2], Y_mdop[:,3])
+# title("MDOP")
+# figure()
+# plot3D(Y_pec[:,1], Y_pec[:,2], Y_pec[:,3])
+# title("PECUZAL")
 
 display("mfnn_tde: $mfnn1")
 display("mfnn_mdop: $mfnn2")

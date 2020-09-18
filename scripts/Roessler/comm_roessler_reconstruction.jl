@@ -16,7 +16,8 @@ include("../../src/data_analysis_functions.jl")
 # the fraction of recurrence rates from the JRP of the reconstruction and the
 # reference and only the reference. As a third criterion we look at the
 # recurrence time entropy, since it is related to the Kolmogorov-entropy as a
-# dynamical invariant.
+# dynamical invariant. We also look at two other RQA-measures and, moreover, the
+# generalized mutual false nearest neighbors.
 
 # Here we look at a chaotic system: The Roessler attractor in the funnel regime
 

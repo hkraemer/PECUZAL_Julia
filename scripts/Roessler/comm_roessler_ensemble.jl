@@ -16,7 +16,8 @@ include("../../src/data_analysis_functions.jl")
 # the fraction of recurrence rates from the JRP of the reconstruction and the
 # reference and only the reference. As a third criterion we look at the
 # recurrence time entropy, since it is related to the Kolmogorov-entropy as a
-# dynamical invariant.
+# dynamical invariant. We also look at two other RQA-measures and, moreover, the
+# generalized mutual false nearest neighbors.
 
 # Here we look at a chaotic system: The Roessler attractor in the funnel regime
 
@@ -108,7 +109,7 @@ LAM_GA = zeros(length(σs),1000)
 LAM_pec = zeros(length(σs),1000)
 
 @time for (cnt,σ) in enumerate(σs)
-    for i = 1:10
+    for i = 1:1000
         tr = Array(sim[i])'[transients+1:end,:].+σ*randn(5001,3)
         tr = regularize(Dataset(tr))
 

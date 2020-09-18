@@ -278,31 +278,6 @@ function mfnn(Y_ref::Dataset, Y_rec::Dataset; w::Int = 1, kNN::Int = 1)
     end
     return mean(F)
 end
-# function mfnn(Y_ref::Dataset, Y_rec::Dataset; w::Int = 1, kNN::Int = 1)
-#
-#     @assert length(Y_ref) == length(Y_rec)
-#     @assert kNN > 0
-#     N = length(Y_ref)
-#     metric = Euclidean()
-#
-#     # compute nearest neighbor distances for both trajectories
-#     vtree = KDTree(Y_ref, metric)
-#     allNNidxs_ref, _ = DelayEmbeddings.all_neighbors(vtree, Y_ref,
-#                                                         1:length(Y_ref), kNN, w)
-#     vtree = KDTree(Y_rec, metric)
-#     allNNidxs_rec, _ = DelayEmbeddings.all_neighbors(vtree, Y_rec,
-#                                                         1:length(Y_rec), kNN, w)
-#
-#     F = zeros(N)
-#     for i = 1:N
-#         factor1 = evaluate(Euclidean(), Y_rec[i], Y_rec[allNNidxs_ref[i][1]])/
-#                   evaluate(Euclidean(), Y_ref[i], Y_ref[allNNidxs_ref[i][1]])
-#         factor2 = evaluate(Euclidean(), Y_ref[i], Y_ref[allNNidxs_rec[i][1]])/
-#                   evaluate(Euclidean(), Y_rec[i], Y_rec[allNNidxs_rec[i][1]])
-#         F[i] = factor1*factor2                                         # Eq.(27)
-#     end
-#     return mean(F)
-# end
 
 
 """
@@ -317,4 +292,17 @@ function elementwise_product(RP₁::RecurrenceMatrix, RP₂::RecurrenceMatrix)
         end
     end
     return JRP
+end
+
+"""
+Generate data from a AR(1) process for a initial value `u0`, a AR-coefficient
+`α` and a white noise scaling parameter `p`. Return a time series of length `N`.
+"""
+function ar_process(u0::T, α::T, p::T, N::Int) where {T<:Real}
+    x = zeros(T, N+10)
+    x[1] = u0
+    for i = 2:N+10
+        x[i] = α*x[i-1] + p*randn()
+    end
+    return x[11:end]
 end

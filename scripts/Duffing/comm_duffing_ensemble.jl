@@ -16,7 +16,8 @@ include("../../src/data_analysis_functions.jl")
 # the fraction of recurrence rates from the JRP of the reconstruction and the
 # reference and only the reference. As a third criterion we look at the
 # recurrence time entropy, since it is related to the Kolmogorov-entropy as a
-# dynamical invariant.
+# dynamical invariant. We also look at two other RQA-measures and, moreover, the
+# generalized mutual false nearest neighbors.
 
 # Here we look at a chaotic system: The Duffing attractor in the funnel regime
 
@@ -58,6 +59,10 @@ duf_ensemble = EnsembleProblem(duf; prob_func = prob_func_duf)
 sim = solve(duf_ensemble; saveat = dt_tra, trajectories = 1000)
 
 ## Analysis of ensemble
+
+# method for standard τ-estimation
+method = "mi_min"
+#method = "ac_zero"
 
 # noise levels
 σs = [0, .1]
@@ -109,13 +114,13 @@ LAM_GA = zeros(length(σs),1000)
 LAM_pec = zeros(length(σs),1000)
 
 @time for (cnt,σ) in enumerate(σs)
-    for i = 1:10
+    for i = 1:1000
         tr = Array(sim[i])'[transients+1:end,:].+σ*randn(5001,3)
         tr = regularize(Dataset(tr))
 
         if i == 1
-            w1 = estimate_delay(tr[:,1], "mi_min")
-            w2 = estimate_delay(tr[:,2], "mi_min")
+            w1 = estimate_delay(tr[:,1], method)
+            w2 = estimate_delay(tr[:,2], method)
             global w = maximum(hcat(w1,w2))
             global taus = 0:100
 
@@ -149,7 +154,7 @@ LAM_pec = zeros(length(σs),1000)
         L_ref[cnt,i] = uzal_cost(tr, Tw = (4*w), w = w, samplesize=1)
 
         #Standard TDE
-        Y_tde, τ_tde = standard_embedding_cao(tr[:,2])
+        Y_tde, τ_tde = standard_embedding_cao(tr[:,2], method = method)
         dim_tde[cnt,i] = size(Y_tde,2)
         L_tde[cnt,i] = uzal_cost(Y_tde, Tw = (4*w), w = w, samplesize=1)
 

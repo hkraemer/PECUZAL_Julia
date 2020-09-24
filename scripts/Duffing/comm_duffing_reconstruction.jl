@@ -25,8 +25,8 @@ include("../../src/data_analysis_functions.jl")
 
 duf = Systems.duffing(ω = 1, f = 0.3, d = 0.2, β = -1)
 # set time interval for integration
-N = 10000 # number of samples
-dt_tra = 0.5
+N = 5000 # number of samples
+dt_tra = 0.3
 t = 0:dt_tra:(dt_tra*N)
 
 
@@ -40,23 +40,28 @@ function duffing!(du,u,p,t)
 end
 
 # set parameters for chaotic Duffing system
-δ = .2
-α = 1
-β = -1
-γ = .3
-ω = 1
+δ = .3
+α = -1
+β = 1
+γ = .51
+ω = 1.2
 p = [δ,α,β,γ,ω]
 
 # random initial condition
-u0 = [2*rand(1); 2*rand(1); 2*rand(1)]
+u0 = [.4*rand(1); .5*rand(1); .2*rand(1)]
+
 # construct a ContinuousDynamicalSystem
 duffing_system = ContinuousDynamicalSystem(duffing!, u0, p)
 # solve ODEproblem / get trajectory
-tr = trajectory(duffing_system, (N*dt_tra);  Ttr = (2000*dt_tra))
-
-
-tr = trajectory(duf, (N*dt_tra); dt = dt_tra, Ttr = (2000*dt_tra))
+tr = trajectory(duffing_system, (N*dt_tra);  Ttr = (2000*dt_tra), dt = dt_tra)
 tr = regularize(tr)
+
+figure()
+plot(tr[1:100,1], label="x")
+plot(tr[1:100,2], label="y")
+legend()
+
+plot3D(tr[:,1], tr[:,2], tr[:,3])
 
 w1 = estimate_delay(tr[:,1], "mi_min")
 w2 = estimate_delay(tr[:,2], "mi_min")

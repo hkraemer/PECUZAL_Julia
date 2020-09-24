@@ -112,3 +112,14 @@ L_pec = minimum(Ls_pec)
                                             RQA3, RQA4, R_ref, R1, R2, R3, R4 =
         perform_recurrence_analysis(tr, Dataset(Y_tde), Dataset(Y_mdop),
                     Dataset(Y_GA), Dataset(Y_pec); ε = 0.08, w = w, kNN = 10)
+
+
+writedlm("./scripts/Fooling systems/noise results/Y_GA.csv",Y_GA)
+writedlm("./scripts/Fooling systems/noise results/Y_mdop.csv",Y_mdop)
+writedlm("./scripts/Fooling systems/noise results/Y_pec.csv",Y_pec)
+writedlm("./scripts/Fooling systems/noise results/taus_GA.csv", τ_vals_GA)
+writedlm("./scripts/Fooling systems/noise results/taus_mdop.csv", τ_vals_mdop)
+writedlm("./scripts/Fooling systems/noise results/taus_pec.csv", τ_vals_pec)
+writedlm("./scripts/Fooling systems/noise results/ts_GA.csv", ts_vals_GA)
+writedlm("./scripts/Fooling systems/noise results/ts_mdop.csv", ts_vals_mdop)
+writedlm("./scripts/Fooling systems/noise results/ts_pec.csv", ts_vals_pec)

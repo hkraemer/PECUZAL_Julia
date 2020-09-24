@@ -103,7 +103,7 @@ L_pec = minimum(Ls_pec)
         perform_recurrence_analysis(tr, Dataset(Y_tde), Dataset(Y_mdop),
                     Dataset(Y_GA), Dataset(Y_pec); ε = 0.08, w = w, kNN = 10)
 
-NN = 4900
+NN = 1000
 figure()
 subplot(231)
 RR_ref = grayscale(R_ref[1:NN,1:NN])
@@ -125,6 +125,24 @@ subplot(235)
 RR4 = grayscale(R4[1:NN,1:NN])
 imshow(RR4, cmap = "binary_r", extent = (1, size(RR_ref)[1], 1, size(RR_ref)[2]))
 title("PECUZAL")
+
+
+figure()
+subplot(131)
+RR_ref = grayscale(R_ref[1:NN,1:NN])
+imshow(RR_ref, cmap = "binary_r", extent = (1, size(RR_ref)[1], 1, size(RR_ref)[2]))
+title("Reference")
+
+subplot(132)
+RR4 = grayscale(R4[1:NN,1:NN])
+imshow(RR4, cmap = "binary_r", extent = (1, size(RR_ref)[1], 1, size(RR_ref)[2]))
+title("Reconstruction")
+
+subplot(133)
+JRP = grayscale(elementwise_product(R4[1:NN,1:NN],R_ref[1:NN,1:NN]))
+imshow(JRP, cmap = "binary_r", extent = (1, size(RR_ref)[1], 1, size(RR_ref)[2]))
+title("Joint Recurrence Plot (JRP)")
+
 
 figure()
 plot3D(tr[:,1], tr[:,2], tr[:,3])
@@ -219,11 +237,3 @@ display("RTE-MRT_GA: $(abs(RQA_ref.RTE/RQA_ref.MRT - RQA3.RTE/RQA3.MRT)/(RQA_ref
 display("RTE-MRT_pec: $(abs(RQA_ref.RTE/RQA_ref.MRT - RQA4.RTE/RQA4.MRT)/(RQA_ref.RTE/RQA_ref.MRT))")
 
 display("*****")
-
-# # using DelimitedFiles
-# #
-# writedlm("Duffing_Y_ref",tr)
-# writedlm("Duffing_Y_tde",Y_tde)
-# writedlm("Duffing_Y_mdop",Y_mdop)
-# writedlm("Duffing_Y_GA",Y_GA)
-# writedlm("Duffing_Y_pec",Y_pec)

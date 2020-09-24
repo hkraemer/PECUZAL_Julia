@@ -43,7 +43,7 @@ function prob_func_duf(prob,i,repeat)
   prob
 end
 
-# set parameters for chaotic Duffing system
+# set parameters for regular Duffing system
 δ = .3
 α = -1
 β = 1
@@ -115,6 +115,7 @@ LAM_pec = zeros(length(σs),1000)
 
 @time for (cnt,σ) in enumerate(σs)
     for i = 1:1000
+        display("σ=$σ, i=$i")
         tr = Array(sim[i])'[transients+1:end,:].+σ*randn(5001,3)
         tr = regularize(Dataset(tr))
 

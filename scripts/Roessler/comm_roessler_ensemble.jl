@@ -110,6 +110,7 @@ LAM_pec = zeros(length(σs),1000)
 
 @time for (cnt,σ) in enumerate(σs)
     for i = 1:1000
+        display("σ=$σ, i=$i")
         tr = Array(sim[i])'[transients+1:end,:].+σ*randn(5001,3)
         tr = regularize(Dataset(tr))
 

@@ -293,6 +293,16 @@ function elementwise_product(RP₁::RecurrenceMatrix, RP₂::RecurrenceMatrix)
     end
     return JRP
 end
+function elementwise_product(RP₁, RP₂)
+    @assert size(RP₁) == size(RP₂)
+    JRP = zeros(Int, size(RP₁))
+    @inbounds for j = 1:size(RP₁,2)
+        @inbounds for i = 1:size(RP₁,1)
+            JRP[i,j] = RP₁[i,j] * RP₂[i,j]
+        end
+    end
+    return JRP
+end
 
 """
 Generate data from a AR(1) process for a initial value `u0`, a AR-coefficient

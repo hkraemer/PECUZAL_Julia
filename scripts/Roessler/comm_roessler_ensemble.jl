@@ -38,8 +38,6 @@ function roessler!(du,u,p,t)
 end
 
 function prob_func_roe(prob,i,repeat)
-  # remake(prob, u0 = [2*rand(1); 2*rand(1); 2*rand(1)])
-  # prob
   @. prob.u0 = [2*rand(1); 2*rand(1); 2*rand(1)]
   prob
 end

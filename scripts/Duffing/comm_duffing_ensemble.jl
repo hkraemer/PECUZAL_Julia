@@ -26,33 +26,33 @@ include("../../src/data_analysis_functions.jl")
 # set time interval for integration
 N = 5000 # number of samples
 transients = 2000
-dt_tra = 0.3
+dt_tra = 0.1
 tspan = (dt_tra*N) + (dt_tra*transients)
 
 function duffing!(du,u,p,t)
     x,y,z = u
-    δ,α,β,γ,ω = p
+    μ,α,β,γ,ω = p
 
     du[1] = y # dx
-    du[2] = -δ*y - α*x - β*x^3 + z #dy
+    du[2] = μ*(1-x^2)*y - α*x - β*x^3 + z
     du[3] = γ*ω*cos(ω*t)# dz
 end
 
 function prob_func_duf(prob,i,repeat)
-  @. prob.u0 = [.4*rand(1); .5*rand(1); .2*rand(1)]
+  @. prob.u0 = [.2*rand(1); .2*rand(1); .2*rand(1)]
   prob
 end
 
 # set parameters for regular Duffing system
-δ = .3
-α = -1
-β = 1
-γ = .51
-ω = 1.2
-p = [δ,α,β,γ,ω]
+μ = .1
+α = 1
+β = 0
+γ = .5
+ω = 2
+p = [μ,α,β,γ,ω]
 
 # random initial condition
-u0 = [.4*rand(1); .5*rand(1); .2*rand(1)]
+u0 = [.2*rand(1); .2*rand(1); .2*rand(1)]
 duf = ODEProblem(duffing!,u0,tspan,p)
 
 duf_ensemble = EnsembleProblem(duf; prob_func = prob_func_duf)
@@ -155,7 +155,7 @@ LAM_pec = zeros(length(σs),1000)
         L_ref[cnt,i] = uzal_cost(tr, Tw = (4*w), w = w, samplesize=1)
 
         #Standard TDE
-        Y_tde, τ_tde = standard_embedding_cao(tr[:,2], method = method)
+        Y_tde, τ_tde = standard_embedding_cao(tr[:,1], method = method)
         dim_tde[cnt,i] = size(Y_tde,2)
         L_tde[cnt,i] = uzal_cost(Y_tde, Tw = (4*w), w = w, samplesize=1)
 

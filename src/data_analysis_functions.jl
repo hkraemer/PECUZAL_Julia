@@ -6,6 +6,7 @@ using RecurrenceAnalysis
 using DelayEmbeddings
 using Distances
 using Statistics
+using LinearAlgebra
 
 
 """
@@ -129,10 +130,14 @@ function standard_embedding_cao(s::Vector{T}; cao_thres::Real = 0.05,
             break
         end
     end
-    if m > 1
-        Y = embed(s, m, τ)
-    else
-        Y = s
+    try
+        if m > 1
+            global Y = embed(s, m, τ)
+        else
+            global Y = s
+        end
+    catch
+        global Y = s
     end
     return Y, τ
 end
@@ -315,4 +320,14 @@ function ar_process(u0::T, α::T, p::T, N::Int) where {T<:Real}
         x[i] = α*x[i-1] + p*randn()
     end
     return x[11:end]
+end
+
+
+"""
+Compute the transitivity from a recurrence plot
+"""
+function transitivity(R::RecurrenceMatrix)
+    RR = R[1:size(R,1),1:size(R,1)]
+    trans = tr(RR*RR*RR)/sum(RR * RR)
+    return trans
 end

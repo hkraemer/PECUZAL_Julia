@@ -1,10 +1,10 @@
 using DrWatson
 @quickactivate "new-embedding-methods"
 
-using DifferentialEquations
 using DynamicalSystems
 using DelayEmbeddings
 using DelimitedFiles
+using PyPlot
 
 include("../../src/pecora_uzal_method.jl")
 include("../../src/data_analysis_functions.jl")

@@ -83,12 +83,12 @@ Keyword arguments:
 [^Hegger1999]: Hegger, Rainer and Kantz, Holger (1999). [Improved false nearest neighbor method to detect determinism in time series data. Physical Review E 60, 4970](https://doi.org/10.1103/PhysRevE.60.4970).
 """
 function standard_embedding_hegger(s::Vector{T}; method::String = "mi_min",
-                                            fnn_thres::Real = 0.05) where {T}
+                                fnn_thres::Real = 0.05, τs = 1:200) where {T}
     @assert method=="ac_zero" || method=="mi_min" || method=="ac_min"
     "The absolute correlation function has elements that are = 0. "*
     "We can't fit an exponential to it. Please choose another method."
 
-    τ = estimate_delay(s, method)
+    τ = estimate_delay(s, method, τs)
     _, _, Y = fnn_uniform_hegger(s, τ; fnn_thres = fnn_thres)
     return Y, τ
 end
@@ -117,12 +117,12 @@ Keyword arguments:
 [^Hegger1999]: Hegger, Rainer and Kantz, Holger (1999). [Improved false nearest neighbor method to detect determinism in time series data. Physical Review E 60, 4970](https://doi.org/10.1103/PhysRevE.60.4970).
 """
 function standard_embedding_cao(s::Vector{T}; cao_thres::Real = 0.05,
-                        method::String = "mi_min", m_max::Int = 10) where {T}
+             τs = 1:200, method::String = "mi_min", m_max::Int = 10) where {T}
     @assert method=="ac_zero" || method=="mi_min" || method=="ac_min"
     "The absolute correlation function has elements that are = 0. "*
     "We can't fit an exponential to it. Please choose another method."
 
-    τ = estimate_delay(s, method)
+    τ = estimate_delay(s, method, τs)
     rat = estimate_dimension(s, τ, 1:m_max, "afnn")
     for i = 1:m_max
         if abs(1-rat[i]) < cao_thres
@@ -139,7 +139,7 @@ function standard_embedding_cao(s::Vector{T}; cao_thres::Real = 0.05,
     catch
         global Y = s
     end
-    return Y, τ
+    return Y, τ, rat
 end
 
 

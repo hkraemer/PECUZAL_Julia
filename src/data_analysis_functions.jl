@@ -288,26 +288,7 @@ end
 """
 Compute elementwise product of two Recurrence Plots (==JRP)
 """
-function elementwise_product(RP₁::RecurrenceMatrix, RP₂::RecurrenceMatrix)
-    @assert size(RP₁) == size(RP₂)
-    JRP = zeros(Int, size(RP₁))
-    @inbounds for j = 1:size(RP₁,2)
-        @inbounds for i = 1:size(RP₁,1)
-            JRP[i,j] = RP₁[i,j] * RP₂[i,j]
-        end
-    end
-    return JRP
-end
-function elementwise_product(RP₁, RP₂)
-    @assert size(RP₁) == size(RP₂)
-    JRP = zeros(Int, size(RP₁))
-    @inbounds for j = 1:size(RP₁,2)
-        @inbounds for i = 1:size(RP₁,1)
-            JRP[i,j] = RP₁[i,j] * RP₂[i,j]
-        end
-    end
-    return JRP
-end
+elementwise_product(RP₁, RP₂) = JointRecurrenceMatrix(RP₁, RP₂)
 
 """
 Generate data from a AR(1) process for a initial value `u0`, a AR-coefficient
@@ -320,14 +301,4 @@ function ar_process(u0::T, α::T, p::T, N::Int) where {T<:Real}
         x[i] = α*x[i-1] + p*randn()
     end
     return x[11:end]
-end
-
-
-"""
-Compute the transitivity from a recurrence plot
-"""
-function transitivity(R::RecurrenceMatrix)
-    RR = R[1:size(R,1),1:size(R,1)]
-    trans = tr(RR*RR*RR)/sum(RR * RR)
-    return trans
 end

@@ -33,7 +33,7 @@ rcParams = PyPlot.PyDict(PyPlot.matplotlib."rcParams")
 font0 = Dict(
         "font.size" => fsa,
         "font.weight" => "bold",
-        "axes.labelweight" => "normal",
+        "axes.labelweight" => "bold",
         "axes.titleweight" => "bold",
         "axes.labelsize" => axislabelsize,
         "axes.linewidth" => lwa,
@@ -62,7 +62,7 @@ ax.text(-0.15, 1.1, panelnames[1], transform=ax.transAxes,
      fontsize=fsp, fontweight="bold", va="top")
 title("L statistics")
 xlabel("K-NN")
-#ylabel("L")
+ylabel("L")
 grid()
 
 ax = fig.add_subplot(5, 2, 2)
@@ -78,7 +78,7 @@ ax.text(-0.15, 1.1, panelnames[2], transform=ax.transAxes,
      fontsize=fsp, fontweight="bold", va="top")
 title("chosen delays")
 xlabel("k-NN")
-#ylabel("τ")
+ylabel("τ")
 grid()
 
 # 2) Dependence on δ-Neighborhood size
@@ -100,8 +100,8 @@ scatter(deltas, Ls[:,2], label="")
 ax.text(-0.15, 1.1, panelnames[3], transform=ax.transAxes,
      fontsize=fsp, fontweight="bold", va="top")
 #title("minimum L")
-xlabel(L"\delta-Neighborhood size")
-#ylabel("L")
+xlabel(L"\delta-Neighborhood size", fontweight="normal")
+ylabel("L")
 grid()
 
 ax = fig.add_subplot(5, 2, 4)
@@ -117,7 +117,7 @@ ax.text(-0.15, 1.1, panelnames[4], transform=ax.transAxes,
      fontsize=fsp, fontweight="bold", va="top")
 #title("chosen delays")
 xlabel(L"\delta-Neighborhood size")
-#ylabel("τ")
+ylabel("τ")
 grid()
 
 # 3) Dependence on p
@@ -142,7 +142,7 @@ ax.text(-0.15, 1.1, panelnames[5], transform=ax.transAxes,
      fontsize=fsp, fontweight="bold", va="top")
 #title("minimum L")
 xlabel("(binomial-) p")
-#ylabel("L")
+ylabel("L")
 grid()
 
 ax = fig.add_subplot(5, 2, 6)
@@ -158,7 +158,7 @@ ax.text(-0.15, 1.1, panelnames[6], transform=ax.transAxes,
      fontsize=fsp, fontweight="bold", va="top")
 #title("chosen delays")
 xlabel("(binomial-) p")
-#ylabel("τ")
+ylabel("τ")
 grid()
 
 
@@ -185,7 +185,7 @@ ax.text(-0.15, 1.1, panelnames[7], transform=ax.transAxes,
 ax.set_xticks([0.01, 0.05])
 #title("minimum L")
 xlabel("(binomial-) α")
-#ylabel("L")
+ylabel("L")
 grid()
 
 ax = fig.add_subplot(5, 2, 8)
@@ -202,7 +202,7 @@ ax.text(-0.15, 1.1, panelnames[8], transform=ax.transAxes,
      fontsize=fsp, fontweight="bold", va="top")
 #title("chosen delays")
 xlabel("(binomial-) α")
-#ylabel("τ")
+ylabel("τ")
 grid()
 
 # 5) Dependence on Tw
@@ -231,7 +231,7 @@ ax.text(-0.15, 1.1, panelnames[9], transform=ax.transAxes,
      fontsize=fsp, fontweight="bold", va="top")
 #title("minimum L")
 xlabel("time window")
-#ylabel("L")
+ylabel("L")
 grid()
 
 ax = fig.add_subplot(5, 2, 10)
@@ -247,7 +247,7 @@ ax.text(-0.15, 1.1, panelnames[10], transform=ax.transAxes,
      fontsize=fsp, fontweight="bold", va="top")
 #title("chosen delays")
 xlabel("time window")
-#ylabel("τ")
+ylabel("τ")
 grid()
 
 

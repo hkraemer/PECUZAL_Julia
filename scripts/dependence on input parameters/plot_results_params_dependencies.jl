@@ -13,13 +13,13 @@ fig = figure(figsize=[15,12])
 
 lwg = 3         # linewidth of the graph
 lwa = 2         # linewidth of the axis
-fsp = 20        # Fontsize of panelnames
-fsa = 14        # Fontsize of the axis
-fsl = 12        # Fontsize of the legendentries
-fst = 16        # Fontsize of title
-axislabelsize = 14 # axislabelsize
-ticklabelsize = 12  # labelsize of ticks
-ms = 10         # markersize of maxima
+fsp = 18        # Fontsize of panelnames
+fsa = 12        # Fontsize of the axis
+fsl = 10        # Fontsize of the legendentries
+fst = 20        # Fontsize of title
+axislabelsize = 12 # axislabelsize
+ticklabelsize = 10  # labelsize of ticks
+ms = 30         # markersize of maxima
 ms_style = "*"  # markerstyle
 
 subplots_adjust(left = 0.07,
@@ -27,7 +27,7 @@ right = 0.96,
 bottom = 0.05,
 top = 0.96,
 wspace = 0.25,
-hspace = 0.4)
+hspace = 0.55)
 
 rcParams = PyPlot.PyDict(PyPlot.matplotlib."rcParams")
 font0 = Dict(
@@ -60,7 +60,7 @@ scatter(Ks, Ls[:,2], label="")
 legend()
 ax.text(-0.15, 1.1, panelnames[1], transform=ax.transAxes,
      fontsize=fsp, fontweight="bold", va="top")
-title("L statistics")
+title("L statistics", fontsize = fst)
 xlabel("K-NN")
 ylabel("L")
 grid()
@@ -76,7 +76,7 @@ legend(loc=1)
 ax.set_ylim([-1,24])
 ax.text(-0.15, 1.1, panelnames[2], transform=ax.transAxes,
      fontsize=fsp, fontweight="bold", va="top")
-title("chosen delays")
+title("chosen delays", fontsize = fst)
 xlabel("k-NN")
 ylabel("τ")
 grid()
@@ -173,15 +173,12 @@ Ls = readdlm("./scripts/computed data/dependence_on_alpha_Ls.csv")
 
 
 ax = fig.add_subplot(5, 2, 7)
-p1 = plot(alphas', Ls[:,1], label="1st embedding cylce", linewidth=lwg)
-color1 = p1[1].get_color()
-scatter(alphas', Ls[:,1], label="")
-p2 = plot(alphas', Ls[:,2], label="2nd embedding cylce", linewidth=lwg)
-color2 = p2[1].get_color()
-scatter(alphas', Ls[:,2], label="")
+p1 = scatter(alphas', Ls[:,1], label="1st embedding cylce")
+p2 = scatter(alphas', Ls[:,2], label="2nd embedding cylce")
 #legend()
 ax.text(-0.15, 1.1, panelnames[7], transform=ax.transAxes,
      fontsize=fsp, fontweight="bold", va="top")
+ax.set_xlim([-0.01, 0.07])
 ax.set_xticks([0.01, 0.05])
 #title("minimum L")
 xlabel("(binomial-) α")
@@ -189,14 +186,15 @@ ylabel("L")
 grid()
 
 ax = fig.add_subplot(5, 2, 8)
-plot(alphas', τ_vals[:,1], label="τ₁, embedding cylce 0", linewidth=lwg, color="r")
-scatter(alphas', τ_vals[:,1], label="", color="r")
-plot(alphas', τ_vals[:,2], label="τ₂, embedding cylce 1", linewidth=lwg, color=color1)
-scatter(alphas', τ_vals[:,2], label="", color=color1)
-plot(alphas', τ_vals[:,3], label="τ₃, embedding cylce 2", linewidth=lwg, color=color2)
-scatter(alphas', τ_vals[:,3], label="", color=color2)
+scatter(alphas', τ_vals[:,1], label="τ₁, embedding cylce 0", c="r")
+#scatter(alphas', τ_vals[:,1], label="", color="r")
+scatter(alphas', τ_vals[:,2], label="τ₂, embedding cylce 1", color=color1)
+#scatter(alphas', τ_vals[:,2], label="", color=color1)
+scatter(alphas', τ_vals[:,3], label="τ₃, embedding cylce 2", color=color2)
+#scatter(alphas', τ_vals[:,3], label="", color=color2)
 #legend()
 ax.set_ylim([-1,24])
+ax.set_xlim([-0.01, 0.07])
 ax.set_xticks([0.01, 0.05])
 ax.text(-0.15, 1.1, panelnames[8], transform=ax.transAxes,
      fontsize=fsp, fontweight="bold", va="top")

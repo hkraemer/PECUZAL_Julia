@@ -15,22 +15,22 @@ A unified approach to properly embed a time series or a set of time series
 
 ## Keyword arguments
 
-* `τs= 0:50`: Possible delay values `τs` (in sampling time units). For each of
+* `τs = 0:50`: Possible delay values `τs` (in sampling time units). For each of
   the `τs`'s the continuity statistic ⟨ε★⟩ gets computed and further processed
   in order to find optimal delays `τᵢ` for each embedding cycle `i` (read
   algorithm description).
 * `w::Int = 1`: Theiler window (neighbors in time with index `w` close to the point,
   that are excluded from being true neighbors). `w=0` means to exclude only the
   point itself, and no temporal neighbors.
-* `samplesize::Real = 0.1`: determine the fraction of all phase space points
-  (=`length(s)`) to be considered (fiducial points v) to average ε★ to produce
-  `⟨ε★⟩`.
-* `K::Int = 13`: the amount of nearest neighbors in the δ-ball (read algorithm description).
-   Must be at least 8 (in order to gurantee a valid statistic). `⟨ε★⟩` is computed
-   taking the minimum result over all `k ∈ K` (read algorithm description).
+* `samplesize::Real = 1`: determine the fraction of all phase space points
+  (=`length(s)`) to be considered (fiducial points v) to average ε★, in order to
+  produce `⟨ε★⟩`.
+* `K::Int = 13`: the amount of nearest neighbors in the δ-ball (read algorithm
+  description). Must be at least 8 (in order to gurantee a valid statistic).
+  `⟨ε★⟩` is computed taking the minimum result over all `k ∈ K`.
 * `KNN::Int = 3`: the amount of nearest neighbors considered, in order to compute
-  σ_k^2 (read algorithm description [`uzal_cost`]@ref). If given a vector, minimum
-  result over all `knn ∈ KNN` is returned.
+  σ_k^2 (read algorithm description [`uzal_cost`]@ref). If given a vector, the
+  minimum result over all `knn ∈ KNN` is returned.
 * `Tw::Int = 4*w`: the maximal considered time horizon for obtaining σ_k^2 (read
    algorithm description [`uzal_cost`]@ref).
 * `metric = Euclidean()`: metric with which to find nearest neigbhors
@@ -45,27 +45,28 @@ The method works iteratively and gradually builds the final embedding vectors
 `Y`. Based on the `⟨ε★⟩`-statistic [`pecora`](@ref) the algorithm picks an
 optimal delay value `τᵢ` for each embedding cycle i.
 For achieving that, we take the inpute time series `s` and compute the continuity
-statistic `⟨ε★⟩`, 1. each local maxima in `⟨ε★⟩` is used for constructing a
+statistic `⟨ε★⟩`. 1. Each local maxima in `⟨ε★⟩` is used for constructing a
 candidate embedding trajectory `Y_trial` with a delay corresponding to that
 specific peak in `⟨ε★⟩`. 2. We then compute the `L`-statistic [`uzal_cost`](@ref)
 for `Y_trial`. 3. We pick the peak/`τ`-value, for which `L` is minimal and
-construct the actual embedding trajectory `Y_actual` (1.-3. corresponds to an
-embedding cycle). 4. We repeat steps 1.-3. with `Y_actual` as input and stop the
-algorithm when `L` can not be reduced anymore. `Y_actual` -> `Y`.
+construct the actual embedding trajectory `Y_actual` (steps 1.-3. correspond to
+an embedding cycle). 4. We repeat steps 1.-3. with `Y_actual` as input and stop
+the algorithm when `L` can not be reduced anymore. `Y_actual` -> `Y`.
 
 In case of multivariate embedding, i.e. when embedding a set of M time series
-(`s::Dataset`), in each embedding cycle `⟨ε★⟩` gets computed for all M time series
-available. The optimal delay value `τ` in each embedding cycle is chosen
-as the peak/`τ`-value for which `L` is minimal under all available peaks and under
-all M `⟨ε★⟩`'s. In the first embedding cycle there will be M! different `⟨ε★⟩`'s
-to consider, since it is not clear a priori which time series of the input should
-consitute the first component of the embedding vector and form `Y_actual`.
+(`s::Dataset`), in each embedding cycle the continuity statistic `⟨ε★⟩` gets
+computed for all M time series available. The optimal delay value `τ` in each
+embedding cycle is chosen as the peak/`τ`-value for which `L` is minimal under
+all available peaks and under all M `⟨ε★⟩`'s. In the first embedding cycle there
+will be M^2 different `⟨ε★⟩`'s to consider, since it is not clear a priori which
+time series of the input should consitute the first component of the embedding
+vector and form `Y_actual`.
 
 The range of considered delay values is determined in `τs` and for the
 nearest neighbor search we respect the Theiler window `w`. The final embedding
 vector is stored in `Y` (`Dataset`). The chosen delay values for each embedding
-cycle are stored in `τ_vals` and the according time series number chosen for the
-each delay value in `τ_vals` is stored in `ts_vals`. For univariate embedding
+cycle are stored in `τ_vals` and the according time series numbers chosen for 
+each delay value in `τ_vals` are stored in `ts_vals`. For univariate embedding
 (`s::Vector`) `ts_vals` is a vector of ones of length `τ_vals`, because there is
 simply just one time series to choose from. The function also returns the
 `L`-statistic `Ls` for each embedding cycle and the continuity statistic `⟨ε★⟩`

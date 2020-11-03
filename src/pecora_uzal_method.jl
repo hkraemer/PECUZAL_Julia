@@ -33,7 +33,6 @@ A unified approach to properly embed a time series or a set of time series
   minimum result over all `knn ∈ KNN` is returned.
 * `Tw::Int = 4*w`: the maximal considered time horizon for obtaining σ_k^2 (read
    algorithm description [`uzal_cost`]@ref).
-* `metric = Euclidean()`: metric with which to find nearest neigbhors
 * `α::Real = 0.05`: The significance level for obtaining the continuity statistic
 * `p::Real = 0.5`: The p-parameter for the binomial distribution used for the
   computation of the continuity statistic ⟨ε★⟩.
@@ -65,23 +64,26 @@ vector and form `Y_actual`.
 The range of considered delay values is determined in `τs` and for the
 nearest neighbor search we respect the Theiler window `w`. The final embedding
 vector is stored in `Y` (`Dataset`). The chosen delay values for each embedding
-cycle are stored in `τ_vals` and the according time series numbers chosen for 
+cycle are stored in `τ_vals` and the according time series numbers chosen for
 each delay value in `τ_vals` are stored in `ts_vals`. For univariate embedding
 (`s::Vector`) `ts_vals` is a vector of ones of length `τ_vals`, because there is
 simply just one time series to choose from. The function also returns the
 `L`-statistic `Ls` for each embedding cycle and the continuity statistic `⟨ε★⟩`
 as an `Array` of `Vector`s.
 
+For distance computations the Euclidean norm is used.
+
 [^Pecora2007]: Pecora, L. M., Moniz, L., Nichols, J., & Carroll, T. L. (2007). [A unified approach to attractor reconstruction. Chaos 17(1)](https://doi.org/10.1063/1.2430294).
 [^Uzal2011]: Uzal, L. C., Grinblat, G. L., Verdes, P. F. (2011). [Optimal reconstruction of dynamical systems: A noise amplification approach. Physical Review E 84, 016223](https://doi.org/10.1103/PhysRevE.84.016223).
 """
 function pecuzal_embedding(s::Vector{T}; τs = 0:50 , w::Int = 1,
     samplesize::Real = 1, K::Int = 13, KNN::Int = 3, Tw::Int=4*w,
-    metric = Euclidean(), α::Real = 0.05, p::Real = 0.5,
-    max_cycles = 50) where {T<:Real}
+    α::Real = 0.05, p::Real = 0.5,max_cycles = 50) where {T<:Real}
 
     @assert 0 < samplesize ≤ 1 "Please select a valid `samplesize`, which denotes a fraction of considered fiducial points, i.e. `samplesize` ∈ (0 1]"
     @assert all(x -> x ≥ 0, τs)
+    metric = Euclidean()
+
     s_orig = s
     s = regularize(s) # especially important for comparative L-statistics
     # define actual phase space trajectory
@@ -121,11 +123,12 @@ end
 
 function pecuzal_embedding(Y::Dataset{D, T}; τs = 0:50 , w::Int = 1,
     samplesize::Real = 1, K::Int = 13, KNN::Int = 3, Tw::Int=4*w,
-    metric = Euclidean(), α::Real = 0.05, p::Real = 0.5,
-    max_cycles = 50) where {D, T<:Real}
+    α::Real = 0.05, p::Real = 0.5, max_cycles = 50) where {D, T<:Real}
 
     @assert 0 < samplesize ≤ 1 "Please select a valid `samplesize`, which denotes a fraction of considered fiducial points, i.e. `samplesize` ∈ (0 1]"
     @assert all(x -> x ≥ 0, τs)
+    metric = Euclidean()
+
     Y_orig = Y
     Y = regularize(Y) # especially important for comparative L-statistics
     # compute initial L values for each time series
@@ -199,7 +202,7 @@ function pecuzal_embedding_cycle!(
 end
 
 """
-Perform one embedding cycle on `Y` with a multivariate set Ys
+Perform one embedding cycle on `Y_act` with a multivariate set Ys
 """
 function pecuzal_multivariate_embedding_cycle!(
         Y_act, flag, Ys, τs, w, counter, ε★s, τ_vals, metric,

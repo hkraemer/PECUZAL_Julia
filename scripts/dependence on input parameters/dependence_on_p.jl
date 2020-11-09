@@ -7,7 +7,7 @@ using Random
 using Test
 using DelimitedFiles
 
-include("../../src/pecora_uzal_method.jl")
+include("../../src/pecuzal_method.jl")
 
 ## In this script we evaluate the dependence of the returned reconstruction
 # parameters on the binomial parameter p, needed for the computation of the

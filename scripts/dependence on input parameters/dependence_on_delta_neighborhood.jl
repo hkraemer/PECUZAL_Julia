@@ -7,7 +7,7 @@ using Random
 using Test
 using DelimitedFiles
 
-include("../../src/pecora_uzal_method.jl")
+include("../../src/pecuzal_method.jl")
 
 ## In this script we evaluate the dependence of the returned reconstruction
 # parameters on the parameter determining the δ-neighborhood, needed for the

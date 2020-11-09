@@ -6,7 +6,7 @@ using DelayEmbeddings
 using DelimitedFiles
 using BenchmarkTools
 
-include("../../src/pecora_uzal_method.jl")
+include("../../src/pecuzal_method.jl")
 include("../../src/data_analysis_functions.jl")
 
 ## We analyze the computational complexity of the proposed PECUZAL method in

@@ -6,10 +6,10 @@ using DynamicalSystemsBase
 using Test
 using DelimitedFiles
 
-include("../src/pecora_uzal_method.jl")
+include("../src/pecuzal_method.jl")
 
-println("\nTesting pecora_uzal_method.jl...")
-@testset "Pecora Uzal" begin
+println("\nTesting pecuzal_method.jl...")
+@testset "PECUZAL" begin
 @testset "Univariate example" begin
     # For comparison reasons using Travis CI we carry out the integration on a UNIX
     # OS and load the resulting time series (see /test/timeseries/produce_timeseries.jl)
@@ -45,7 +45,7 @@ end
     # For comparison reasons using Travis CI we carry out the integration on a UNIX
     # OS and load the resulting time series (see /test/timeseries/produce_timeseries.jl)
 
-    include("../src/pecora_uzal_method.jl")
+    include("../src/pecuzal_method.jl")
     tr = readdlm("./test/timeseries/lorenz_pecora_multi.csv")
     tr = Dataset(tr) # input timeseries = x component of lorenz
     w1 = estimate_delay(tr[:,1], "mi_min")

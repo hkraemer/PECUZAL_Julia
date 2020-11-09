@@ -6,7 +6,7 @@ using DynamicalSystems
 using DelayEmbeddings
 using DelimitedFiles
 
-include("../../src/pecora_uzal_method.jl")
+include("../../src/pecuzal_method.jl")
 include("../../src/data_analysis_functions.jl")
 
 ## We analyze the reconstruction from standard time delay embedding, the

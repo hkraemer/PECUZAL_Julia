@@ -16,8 +16,7 @@ ti = time()
 
 const diffeq = (atol = 1e-9, rtol = 1e-9, maxiters = typemax(Int))
 
-include("test_pecora_uzal_embedding.jl")
-include("test_fnn_hegger.jl")
+include("test_pecuzal_embedding.jl")
 
 ti = time() - ti
 println("\nTest took total time of:")

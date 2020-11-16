@@ -12,3 +12,6 @@ julia:
 matrix:
   allow_failures:
   - julia: nightly
+
+script:
+- julia --check-bounds=yes --color=yes --inline=no -e "using Pkg; Pkg.test(coverage=true)"

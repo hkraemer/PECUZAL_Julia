@@ -1,5 +1,5 @@
-name = "PECUZAL_Julia"
-uuid = "349f10bd-2ea4-4cd7-836a-97886d603005"
+name = "pecuzal_method"
+uuid = "d2606af8-34aa-4cfe-8f21-318413c652ec"
 authors = ["K. Hauke Kraemer <hkraemer@pik-potsdam.de>","George Datseris"]
 version = "0.1.0"
 

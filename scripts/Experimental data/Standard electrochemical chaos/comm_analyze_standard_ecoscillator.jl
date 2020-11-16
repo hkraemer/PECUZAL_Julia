@@ -4,6 +4,8 @@ using DrWatson
 using DelayEmbeddings
 using DelimitedFiles
 using StatsBase
+using PyPlot
+pygui(true)
 
 include("../../../src/pecuzal_method.jl")
 include("../../../src/data_analysis_functions.jl")
@@ -102,6 +104,14 @@ L_pec1 = minimum(Ls_pec1)
                                                             τs = taus , w = w2)
 L_pec2 = minimum(Ls_pec2)
 
+## Plot attractor
+figure()
+plot3D(Y_pec1[:,1],Y_pec1[:,2],Y_pec1[:,3], linewidth=.1)
+title("PECUZAL reconstruction of chaotic chemical oscillator (setup I)")
+xlabel("x(t+$(τ_vals_pec1[1]))")
+ylabel("x(t+$(τ_vals_pec1[2]))")
+zlabel("x(t+$(τ_vals_pec1[3]))")
+grid()
 
 ## Make all reconstructions equally long
 N1 = length(Y_tde1)

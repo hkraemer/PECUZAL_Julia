@@ -9,9 +9,11 @@ George Datseris. It contains all the source code for producing the article [krae
 
 
 To (locally) reproduce this project, do the following:
+
 0. Download this code base. Notice that raw data are typically not included in the
    git repo and may need to be downloaded independently.
 1. Open a Julia console and do:
+
    .. code-block:: julia
 
        julia> cd("path/to/this/project")
@@ -27,8 +29,8 @@ This repository is not intented to make a self-contained Julia package, but rath
 give readers of [kraemer2020]_ the opportunity to get full access to any source
 code.
 The PECUZAL method is incorporated and maintained in the
-`DynamicalSystems.jl <https://juliadynamics.github.io/DynamicalSystems.jl/dev/>`-Ecosystem,
-specifically in the `DelayEmbeddings.jl <https://github.com/JuliaDynamics/DelayEmbeddings.jl>`
+`DynamicalSystems.jl <https://juliadynamics.github.io/DynamicalSystems.jl/dev/>`_-Ecosystem,
+specifically in the `DelayEmbeddings.jl <https://github.com/JuliaDynamics/DelayEmbeddings.jl>`_
 package. Here (hyperref to be added) the reader can find a full documentation and
 some basic example illustrating the usage of the PECUZAL method.
 

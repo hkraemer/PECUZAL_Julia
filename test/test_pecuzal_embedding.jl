@@ -1,5 +1,5 @@
-# using DrWatson
-# @quickactivate "PECUZAL_Julia"
+using DrWatson
+@quickactivate "PECUZAL_Julia"
 
 using DelayEmbeddings
 using DynamicalSystemsBase

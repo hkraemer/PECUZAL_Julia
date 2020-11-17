@@ -1,7 +1,8 @@
-# Pecuzal Julia
+# PECUZAL Julia
 
-This code base is using the Julia Language and [DrWatson](https://juliadynamics.github.io/DrWatson.jl/stable/)
-to make a reproducible scientific project named
+This code base is using the Julia Language and [DrWatson](https://juliadynamics.github.io/DrWatson.jl/stable/) to make a reproducible scientific project. It contains all the source
+for producing the article
+
 > new-embedding-methods
 
 It is authored by George Datseris, Hauke Kraemer.

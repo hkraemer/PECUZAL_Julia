@@ -1,6 +1,9 @@
 using DrWatson
 @quickactivate "PECUZAL_Julia"
 
+# These tests are only for DelayEmbeddings.jl are not strictly needed for this
+# scientific project
+
 using DelayEmbeddings
 using DynamicalSystemsBase
 using Test

@@ -9,6 +9,9 @@ using DelimitedFiles
 include("../../src/pecuzal_method.jl")
 include("../../src/data_analysis_functions.jl")
 
+## This script was for testing reasons only and had no impact of any results
+# shown in the paper
+
 ## We analyze the reconstruction from standard time delay embedding, the
 # MDOP embedding algorithm and the Garcia & Almeida method and compare it to
 # our propsed method: The pecuzal method.

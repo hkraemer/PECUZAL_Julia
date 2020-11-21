@@ -2,6 +2,9 @@ using DrWatson
 @quickactivate "PECUZAL_Julia"
 using DelayEmbeddings
 
+# These tests are only for DelayEmbeddings.jl are not strictly needed for this
+# scientific project
+
 ti = time()
 
 include("test_pecuzal_embedding.jl")

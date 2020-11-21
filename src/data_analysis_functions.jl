@@ -1,6 +1,8 @@
 using DrWatson
 @quickactivate "PECUZAL_Julia"
 
+# Core functions for the usage in `/scripts`-folder
+
 using DynamicalSystems
 using RecurrenceAnalysis
 using DelayEmbeddings

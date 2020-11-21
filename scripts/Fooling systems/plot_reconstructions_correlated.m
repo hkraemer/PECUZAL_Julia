@@ -1,5 +1,7 @@
 
-%% Plot PS-reconstructions 
+%% Plot PS-reconstructions for Fooling Dataset-Reconstructions performed in
+% the scripts `comm_colored_noise.jl`/`analyze_noise_results.jl` and
+% `comm_correlated.jl`/`analyze_correlated_results.jl`
 
 clear, clc
 

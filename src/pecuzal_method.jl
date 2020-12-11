@@ -79,12 +79,16 @@ For distance computations the Euclidean norm is used.
 [^Uzal2011]: Uzal, L. C., Grinblat, G. L., Verdes, P. F. (2011). [Optimal reconstruction of dynamical systems: A noise amplification approach. Physical Review E 84, 016223](https://doi.org/10.1103/PhysRevE.84.016223).
 """
 function pecuzal_embedding(s::Vector{T}; τs = 0:50 , w::Int = 1,
-    samplesize::Real = 1, K::Int = 13, KNN::Int = 3, Tw::Int=4*w,
+    samplesize::Real = 1, K::Int = 13, KNN::Int = 3, Tw::Int=w,
     α::Real = 0.05, p::Real = 0.5, max_cycles::Int = 50) where {T<:Real}
 
     @assert 0 < samplesize ≤ 1 "Please select a valid `samplesize`, which denotes a fraction of considered fiducial points, i.e. `samplesize` ∈ (0 1]"
     @assert all(x -> x ≥ 0, τs)
     metric = Euclidean()
+    # ensure time horizon minimum 2 sampling units ahead
+    if Tw == 1
+        Tw = 2
+    end
 
     s_orig = s
     s = regularize(s) # especially important for comparative L-statistics
@@ -119,17 +123,21 @@ function pecuzal_embedding(s::Vector{T}; τs = 0:50 , w::Int = 1,
     for i = 2:length(τ_vals[1:counter-1])
         Y_final = DelayEmbeddings.hcat_lagged_values(Y_final,s_orig,τ_vals[i])
     end
-    return Y_final, τ_vals[1:end-1], ts_vals[1:end-1], Ls, ε★s[:,1:counter-1]
+    return Y_final, τ_vals[1:end-1], ts_vals[1:end-1], Ls, ε★s[:,1:end-1]
 
 end
 
 function pecuzal_embedding(Y::Dataset{D, T}; τs = 0:50 , w::Int = 1,
-    samplesize::Real = 1, K::Int = 13, KNN::Int = 3, Tw::Int=4*w,
+    samplesize::Real = 1, K::Int = 13, KNN::Int = 3, Tw::Int=w,
     α::Real = 0.05, p::Real = 0.5, max_cycles::Int = 50) where {D, T<:Real}
 
     @assert 0 < samplesize ≤ 1 "Please select a valid `samplesize`, which denotes a fraction of considered fiducial points, i.e. `samplesize` ∈ (0 1]"
     @assert all(x -> x ≥ 0, τs)
     metric = Euclidean()
+    # ensure time horizon minimum 2 sampling units ahead
+    if Tw == 1
+        Tw = 2
+    end
 
     Y_orig = Y
     Y = regularize(Y) # especially important for comparative L-statistics
@@ -170,7 +178,7 @@ function pecuzal_embedding(Y::Dataset{D, T}; τs = 0:50 , w::Int = 1,
         Y_final = DelayEmbeddings.hcat_lagged_values(Y_final,Y_orig[:,ts_vals[i]],τ_vals[i])
     end
 
-    return Y_final, τ_vals[1:end-1], ts_vals[1:end-1], Ls, ε★s[:,1:counter-1]
+    return Y_final, τ_vals[1:end-1], ts_vals[1:end-1], Ls, ε★s[:,1:end-1]
 
 end
 
@@ -246,8 +254,9 @@ function first_embedding_cycle_pecuzal!(Ys, M, τs, w, samplesize, K,
                                         Ys, τs, Tw, KNN, w, samplesize,
                                         metric)
     end
-    ξ_mini, min_idx = findmin(ξ_min)
-    L_mini = L_min[min_idx]
+    # ξ_mini, min_idx = findmin(ξ_min)
+    # L_mini = L_min[min_idx]
+    L_mini, min_idx = findmin(L_min)
     # update τ_vals, ts_vals, Ls, ε★s
     push!(τ_vals, τs[L_min_idx[min_idx]])
     push!(ts_vals, min_idx)             # time series to start with
@@ -328,7 +337,8 @@ function choose_right_embedding_params(ε★, Y, Ys, τs, Tw, KNN, w, samplesize
         L_min_[ts] = L_trials_[min_idx_]
         τ_idx[ts] = max_idx_[min_idx_]-1
     end
-    idx = sortperm(ξ_min_)
+    #idx = sortperm(ξ_min_)
+    idx = sortperm(L_min_)
     return L_min_[idx[1]], τ_idx[idx[1]], idx[1], ξ_min_[idx[1]]
 end
 

@@ -158,7 +158,7 @@ function pecuzal_embedding(Y::Dataset{D, T}; τs = 0:50 , w::Int = 1,
         Y_final = DelayEmbeddings.hcat_lagged_values(Y_final,Y_orig[:,ts_vals[i]],τ_vals[i])
     end
 
-    return Y_final, τ_vals[1:end-1], ts_vals[1:end-1], Ls[1:end-1], ε★s[:,1:counter-1]
+    return Y_final, τ_vals[1:end-1], ts_vals[1:end-1], Ls[1:end-1], ε★s[:,1:end-1]
 
 end
 
@@ -239,9 +239,9 @@ function first_embedding_cycle_pecuzal!(Ys, M, τs, w, samplesize, K,
                                         Ys, τs, KNN, w, samplesize,
                                         metric)
     end
-    ξ_mini, min_idx = findmin(ξ_min)
-    L_mini = L_min[min_idx]
-    #L_mini, min_idx = findmin(L_min)
+    # ξ_mini, min_idx = findmin(ξ_min)
+    # L_mini = L_min[min_idx]
+    L_mini, min_idx = findmin(L_min)
     # update τ_vals, ts_vals, Ls, ε★s
     push!(τ_vals, τs[L_min_idx[min_idx]])
     push!(ts_vals, min_idx)             # time series to start with
@@ -281,14 +281,14 @@ end
     Choose the minimum L and corresponding τ for each ε★-statistic, based on
 picking the peak in ε★, which corresponds to the minimal `L`-statistic.
 """
-function choose_right_embedding_params!(ε★, Y, Ys, τ_vals, ts_vals, Ls, ε★s,
+function choose_right_embedding_params!(ε★, Y_act, Ys, τ_vals, ts_vals, Ls, ε★s,
                                  counter, τs, KNN, w, samplesize, metric)
     L_min_ = zeros(size(Ys,2))
     τ_idx = zeros(Int,size(Ys,2))
     for ts = 1:size(Ys,2)
         # zero-padding of ⟨ε★⟩ in order to also cover τ=0 (important for the multivariate case)
         # get the L-statistic for each peak in ⟨ε★⟩ and take the one according to L_min
-        L_trials_, max_idx_, _, _ = local_L_statistics(vec([0; ε★[:,ts]]), Y, Ys[:,ts],
+        L_trials_, max_idx_, _, _ = local_L_statistics(vec([0; ε★[:,ts]]), Y_act, Ys[:,ts],
                                         τs, KNN, w, samplesize, metric)
         L_min_[ts], min_idx_ = findmin(L_trials_)
         τ_idx[ts] = max_idx_[min_idx_]-1
@@ -310,7 +310,7 @@ Here the peak is chosen not on the basis of minimal `L`, as in all consecutive
 embedding cycles, but on the basis of minimal `ξ` = (peak height * resulting
 `L`-statistic), which is the last output variable.
 """
-function choose_right_embedding_params(ε★, Y, Ys, τs, KNN, w, samplesize, metric)
+function choose_right_embedding_params(ε★, Y_act, Ys, τs, KNN, w, samplesize, metric)
     ξ_min_ = zeros(size(Ys,2))
     L_min_ = zeros(size(Ys,2))
     τ_idx = zeros(Int,size(Ys,2))
@@ -318,14 +318,15 @@ function choose_right_embedding_params(ε★, Y, Ys, τs, KNN, w, samplesize, me
     for ts = 1:size(Ys,2)
         # zero-padding of ⟨ε★⟩ in order to also cover τ=0 (important for the multivariate case)
         # get the L-statistic for each peak in ⟨ε★⟩ and take the one according to L_min
-        L_trials_, max_idx_, ξ_trials_ , L_acts_ = local_L_statistics(vec([0; ε★[:,ts]]), Dataset(Y), Ys[:,ts],
+        L_trials_, max_idx_, ξ_trials_ , L_acts_ = local_L_statistics(vec([0; ε★[:,ts]]), Dataset(Y_act), Ys[:,ts],
                                         τs, KNN, w, samplesize, metric)
         ξ_min_[ts], min_idx_ = findmin(ξ_trials_)
         L_min_[ts] = L_trials_[min_idx_]
         L_act_[ts] = L_acts_[min_idx_]
         τ_idx[ts] = max_idx_[min_idx_]-1
     end
-    idx = sortperm(ξ_min_)
+    #idx = sortperm(ξ_min_)
+    idx = sortperm(L_min_)
     return L_min_[idx[1]], τ_idx[idx[1]], idx[1], ξ_min_[idx[1]], L_act_[idx[1]]
 end
 
@@ -355,22 +356,17 @@ function get_minimum_L_by_separation(Y_act::Dataset{D, T}, Y_trial::Dataset{D2, 
                     K::Int = KNN, w::Int = w, samplesize::Real = samplesize,
                     metric = metric) where {D, D2, T<:Real}
     # loop over time horizons until the maximum L-separation is reached
-    L1, L2, L1_former, L2_former, dist_former = 0, 0, 0, 0, 999999999
+    L1 = zeros(τs[end])
+    L2 = zeros(τs[end])
     for Tw = 1:τs[end]
-        L1 = uzal_cost(Y_act; Tw = Tw, K = KNN, w = w,
+        L1[Tw] = uzal_cost(Y_act; Tw = Tw, K = KNN, w = w,
                 samplesize = samplesize, metric = metric)
-        L2 = uzal_cost(Y_trial; Tw = Tw, K = KNN, w = w,
+        L2[Tw] = uzal_cost(Y_trial; Tw = Tw, K = KNN, w = w,
                 samplesize = samplesize, metric = metric)
-        dist = L2 - L1
-        if dist > dist_former   # greater than.., because better L-vals are more negativ
-            break
-        else
-            L1_former = L1
-            L2_former = L2
-            dist_former = dist
-        end
     end
-    return L1_former, L2_former
+    dist = L2 .- L1
+    _, idx = findmin(dist)
+    return L1[idx], L2[idx]
 end
 
 function pecuzal_break_criterion(Ls, counter, max_num_of_cycles)

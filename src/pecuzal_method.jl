@@ -109,12 +109,12 @@ function pecuzal_embedding(s::Vector{T}; τs = 0:50 , w::Int = 1,
         counter += 1
     end
     # construct final reconstruction vector
-    NN = (length(s)-sum(τ_vals[1:counter-1]))
+    NN = (length(s)-sum(τ_vals[1:end-1]))
     Y_final = s_orig
-    for i = 2:length(τ_vals[1:counter-1])
-        Y_final = DelayEmbeddings.hcat_lagged_values(Y_final,s_orig,τ_vals[i])
+    for i = 2:length(τ_vals[1:end-1])
+        Y_final = DelayEmbeddings.hcat_lagged_values(Y_final, s_orig, τ_vals[i])
     end
-    return Y_final, τ_vals[1:end-1], ts_vals[1:end-1], Ls[1:end-1], ε★s[:,1:counter-1]
+    return Y_final, τ_vals[1:end-1], ts_vals[1:end-1], Ls[1:end-1], ε★s[:,1:end-1]
 
 end
 
@@ -241,6 +241,7 @@ function first_embedding_cycle_pecuzal!(Ys, M, τs, w, samplesize, K,
     end
     ξ_mini, min_idx = findmin(ξ_min)
     L_mini = L_min[min_idx]
+    #L_mini, min_idx = findmin(L_min)
     # update τ_vals, ts_vals, Ls, ε★s
     push!(τ_vals, τs[L_min_idx[min_idx]])
     push!(ts_vals, min_idx)             # time series to start with
@@ -355,7 +356,7 @@ function get_minimum_L_by_separation(Y_act::Dataset{D, T}, Y_trial::Dataset{D2, 
                     metric = metric) where {D, D2, T<:Real}
     # loop over time horizons until the maximum L-separation is reached
     L1, L2, L1_former, L2_former, dist_former = 0, 0, 0, 0, 999999999
-    for Tw = w:τs[end]
+    for Tw = 1:τs[end]
         L1 = uzal_cost(Y_act; Tw = Tw, K = KNN, w = w,
                 samplesize = samplesize, metric = metric)
         L2 = uzal_cost(Y_trial; Tw = Tw, K = KNN, w = w,

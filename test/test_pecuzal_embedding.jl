@@ -25,7 +25,7 @@ K = 14
 samplesize = 1
 KNN = 3
 
-@time Y, τ_vals, ts_vals, Ls , εs = pecuzal_embedding(s[1:5000];
+@time Y_s, τ_vals_s, ts_vals_s, Ls_s , εs_s = pecuzal_embedding(s[1:5000];
                                     τs = 0:Tmax , w = w, samplesize = samplesize,
                                     K = K, KNN = KNN)
 

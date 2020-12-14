@@ -25,15 +25,12 @@ K = 14
 samplesize = 1
 KNN = 3
 
-@time Y_s, τ_vals_s, ts_vals_s, Ls_s , εs_s = pecuzal_embedding(s[1:5000];
+@time Y, τ_vals, ts_vals, Ls , εs = pecuzal_embedding(s[1:5000];
                                     τs = 0:Tmax , w = w, samplesize = samplesize,
                                     K = K, KNN = KNN)
-Ls = Ls_s
-τ_vals = τ_vals_s
-ts_vals = ts_vals_s
-@test -2.453 < Ls[1] < -2.452
-@test -3.179 < Ls[2] < -3.178
-@test -3.366 < Ls[3] < -3.365
+
+@test -0.7256 < Ls[1] < -0.7255
+@test -0.317 < Ls[2] < -0.3169
 
 @test τ_vals[2] == 18
 @test τ_vals[3] == 9
@@ -62,16 +59,18 @@ samplesize = 1
 @time Y, τ_vals, ts_vals, Ls , ε★ = pecuzal_embedding(tr[1:5000,:];
                                     τs = 0:Tmax , w = w, samplesize = samplesize)
 
-@test length(ts_vals) == 4
-@test ts_vals[3] == ts_vals[4] == 1
-@test ts_vals[1] == 2
-@test ts_vals[2] == 3
+@test length(ts_vals) == 5
+@test ts_vals[3] == ts_vals[4] == ts_vals[5] == 1
+@test ts_vals[1] == 3
+@test ts_vals[2] == 2
 @test τ_vals[2] == 0
 @test τ_vals[3] == 62
-@test τ_vals[4] == 0
-@test -2.19 < Ls[1] < -2.18
-@test -2.49 < Ls[2] < -2.48
-@test -2.57 < Ls[3] < -2.56
+@test τ_vals[4] == 48
+@test τ_vals[5] == 0
+@test -0.9336 < Ls[1] < -0.9335
+@test -0.3514 < Ls[2] < -0.3513
+@test -0.1228 < Ls[3] < -0.1227
+@test -0.0144 < Ls[4] < -0.0143
 
 # Dummy input
 d1 = randn(1000)

@@ -45,12 +45,12 @@ w = maximum(hcat(w1,w2,w3))
 taus = 0:100
 
 # L-value of reference
-L_ref = uzal_cost(tr, Tw = (4*w), w = w, samplesize=1)
+L_ref = uzal_cost(tr, Tw = w, w = w, samplesize=1)
 
 #Standard TDE
 @time Y_tde, τ = standard_embedding_cao(tr[:,1])
 E2s = DelayEmbeddings.stochastic_indicator(tr[:,1], τ, 1:size(Y_tde,2))
-L_tde = uzal_cost(Y_tde, Tw = (4*w), w = w, samplesize=1)
+L_tde = uzal_cost(Y_tde, Tw = w, w = w, samplesize=1)
 
 #MDOP embedding
 println("Computation time MDOP:")
@@ -90,14 +90,14 @@ println("Computation time MDOP:")
 
     Y_mdop, τ_vals_mdop, ts_vals_mdop, FNNs_mdop , βs_mdop = mdop_embedding(tr;
                                                         τs = taus_mdop , w = w)
-    L_mdop = uzal_cost(Y_mdop, Tw = (4*w), w = w, samplesize=1)
+    L_mdop = uzal_cost(Y_mdop, Tw = w, w = w, samplesize=1)
 end
 
 #Garcia & Almeida
 println("Computation time Garcia & Almeida method:")
 @time Y_GA, τ_vals_GA, ts_vals_GA, FNNs_GA , ns_GA = garcia_almeida_embedding(tr;
                                                     τs = taus , w = w, T = w)
-L_GA = uzal_cost(Y_GA, Tw = (4*w), w = w, samplesize=1)
+L_GA = uzal_cost(Y_GA, Tw = w, w = w, samplesize=1)
 
 #Pecuzal
 println("Computation time pecuzal method:")

@@ -5,6 +5,7 @@ using DifferentialEquations
 using DynamicalSystems
 using DelayEmbeddings
 using DelimitedFiles
+using Random
 
 include("../../src/pecuzal_method.jl")
 include("../../src/data_analysis_functions.jl")
@@ -48,6 +49,7 @@ b = .2
 c = 5.7
 p = [a, b, c]
 
+Random.seed!(1234)
 u0 = [2*rand(1); 2*rand(1); 2*rand(1)]
 roe = ODEProblem(roessler!,u0,tspan,p)
 
@@ -145,27 +147,27 @@ LAM_pec = zeros(length(σs),1000)
         ## Perform reconstructions and compute according L-value
 
         # L-value of reference
-        L_ref[cnt,i] = uzal_cost(tr, Tw = (4*w), w = w, samplesize=1)
+        L_ref[cnt,i] = uzal_cost(tr, Tw = w, w = w, samplesize=1)
 
         #Standard TDE
         Y_tde, τ_tde = standard_embedding_cao(tr[:,2])
         dim_tde[cnt,i] = size(Y_tde,2)
-        L_tde[cnt,i] = uzal_cost(Y_tde, Tw = (4*w), w = w, samplesize=1)
+        L_tde[cnt,i] = uzal_cost(Y_tde, Tw = w, w = w, samplesize=1)
 
         #MDOP
-        Y_mdop, τ_vals_mdop, ts_vals_mdop, FNNs_mdop , βs_mdop = mdop_embedding(tr[:,1:2];
+        Y_mdop, τ_vals_mdop, ts_vals_mdop, FNNs_mdop , βs_mdop = mdop_embedding(tr;
                                                             τs = taus_mdop , w = w)
         dim_mdop[cnt,i] = size(Y_mdop,2)
-        L_mdop[cnt,i] = uzal_cost(Y_mdop, Tw = (4*w), w = w, samplesize=1)
+        L_mdop[cnt,i] = uzal_cost(Y_mdop, Tw = w, w = w, samplesize=1)
 
         #Garcia & Almeida
-        Y_GA, τ_vals_GA, ts_vals_GA, FNNs_GA , ns_GA = garcia_almeida_embedding(tr[:,1:2];
+        Y_GA, τ_vals_GA, ts_vals_GA, FNNs_GA , ns_GA = garcia_almeida_embedding(tr;
                                                             τs = taus , w = w, T = w)
         dim_GA[cnt,i] = size(Y_GA,2)
-        L_GA[cnt,i] = uzal_cost(Y_GA, Tw = (4*w), w = w, samplesize=1)
+        L_GA[cnt,i] = uzal_cost(Y_GA, Tw = w, w = w, samplesize=1)
 
         #Pecuzal
-        Y_pec, τ_vals_pec, ts_vals_pec, Ls_pec , εs_pec = pecuzal_embedding(tr[:,1:2];
+        Y_pec, τ_vals_pec, ts_vals_pec, Ls_pec , εs_pec = pecuzal_embedding(tr;
                                                                     τs = taus , w = w)
         dim_pec[cnt,i] = size(Y_pec,2)
         L_pec[cnt,i] = minimum(Ls_pec)

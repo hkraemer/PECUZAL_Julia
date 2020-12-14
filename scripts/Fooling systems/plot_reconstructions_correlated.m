@@ -20,7 +20,7 @@ fs = 20;
 
 figure('Units','normalized','Position',[.01 .01 .99 .99])
 subplot(131)
-plot3(Y_GA(:,1),Y_GA(:,2),Y_GA(:,3))
+plot3(Y_GA(:,2),Y_GA(:,4),Y_GA(:,3))
 str1 = sprintf('Garcia & Almeida',1.4);
 str2 = sprintf(strcat("delays: [",num2str(tau_vals_GA'),"]"));
 str3 = sprintf(strcat("ts: [",num2str(ts_vals_GA'),"]"));

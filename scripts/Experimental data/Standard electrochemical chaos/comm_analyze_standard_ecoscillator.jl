@@ -2,9 +2,11 @@ using DrWatson
 @quickactivate "PECUZAL_Julia"
 
 using DelayEmbeddings
+using RecurrenceAnalysis
 using DelimitedFiles
 using StatsBase
 using PyPlot
+using Random
 pygui(true)
 
 include("../../../src/pecuzal_method.jl")
@@ -33,6 +35,7 @@ data2 = readdlm("./scripts/Experimental data/Standard electrochemical chaos/s1ch
 x1 = data1[1:2:end]
 x2 = data2[1:2:end]
 
+Random.seed!(1234)
 x1 = regularize(x1 .+ .00001*randn(length(x1)))
 x2 = regularize(x2 .+ .00001*randn(length(x2)))
 
@@ -46,8 +49,8 @@ taus = 0:150
 #Standard TDE
 @time Y_tde1, _ = standard_embedding_cao(x1)
 @time Y_tde2, _ = standard_embedding_cao(x2)
-L_tde1 = uzal_cost(Y_tde1, Tw = (4*w1), w = w1, samplesize=1)
-L_tde2 = uzal_cost(Y_tde2, Tw = (4*w2), w = w2, samplesize=1)
+L_tde1 = uzal_cost(Y_tde1, Tw = w1, w = w1, samplesize=1)
+L_tde2 = uzal_cost(Y_tde2, Tw = w2, w = w2, samplesize=1)
 
 
 #MDOP embedding
@@ -80,20 +83,20 @@ println("Computation time MDOP:")
 
     Y_mdop1, τ_vals_mdop1, ts_vals_mdop1, FNNs_mdop1 , βs_mdop1 = mdop_embedding(x1;
                                                         τs = taus_mdop1 , w = w1)
-    L_mdop1 = uzal_cost(Y_mdop1, Tw = (4*w1), w = w1, samplesize=1)
+    L_mdop1 = uzal_cost(Y_mdop1, Tw = w1, w = w1, samplesize=1)
     Y_mdop2, τ_vals_mdop2, ts_vals_mdop2, FNNs_mdop2 , βs_mdop2 = mdop_embedding(x2;
                                                         τs = taus_mdop2 , w = w2)
-    L_mdop2 = uzal_cost(Y_mdop2, Tw = (4*w2), w = w2, samplesize=1)
+    L_mdop2 = uzal_cost(Y_mdop2, Tw = w2, w = w2, samplesize=1)
 end
 
 #Garcia & Almeida
 println("Computation time Garcia & Almeida method:")
 @time Y_GA1, τ_vals_GA1, ts_vals_GA1, FNNs_GA1 , ns_GA1 = garcia_almeida_embedding(x1;
                                                     τs = taus , w = w1, T = w1)
-L_GA1 = uzal_cost(Y_GA1, Tw = (4*w1), w = w1, samplesize=1)
+L_GA1 = uzal_cost(Y_GA1, Tw = w1, w = w1, samplesize=1)
 @time Y_GA2, τ_vals_GA2, ts_vals_GA2, FNNs_GA2 , ns_GA2 = garcia_almeida_embedding(x2;
                                                     τs = taus , w = w2, T = w2)
-L_GA2 = uzal_cost(Y_GA2, Tw = (4*w2), w = w2, samplesize=1)
+L_GA2 = uzal_cost(Y_GA2, Tw = w2, w = w2, samplesize=1)
 
 #Pecuzal
 println("Computation time pecuzal method:")
@@ -133,6 +136,7 @@ NN2 = minimum(hcat(N1, N2, N3, N4))
 N = 2000
 
 ## RQA
+Random.seed!(1234)
 samplesize = 1000
 idxs1 = sample(vec(1:NN1-N-1), samplesize, replace = false)
 idxs2 = sample(vec(1:NN2-N-1), samplesize, replace = false)
@@ -177,38 +181,38 @@ for i = 1:samplesize
     RQA_tde1[1,i] = RQA11.ENTR
     RQA_tde1[2,i] = RQA11.LAM
     RQA_tde1[3,i] = RQA11.RTE
-    RQA_tde1[4,i] = transitivity(R11)
+    RQA_tde1[4,i] = RQA11.TRANS
     RQA_tde2[1,i] = RQA11.ENTR
     RQA_tde2[2,i] = RQA11.LAM
     RQA_tde2[3,i] = RQA11.RTE
-    RQA_tde2[4,i] = transitivity(R12)
+    RQA_tde2[4,i] = RQA11.TRANS
 
     RQA_GA1[1,i] = RQA21.ENTR
     RQA_GA1[2,i] = RQA21.LAM
     RQA_GA1[3,i] = RQA21.RTE
-    RQA_GA1[4,i] = transitivity(R21)
+    RQA_GA1[4,i] = RQA21.TRANS
     RQA_GA2[1,i] = RQA22.ENTR
     RQA_GA2[2,i] = RQA22.LAM
     RQA_GA2[3,i] = RQA22.RTE
-    RQA_GA2[4,i] = transitivity(R22)
+    RQA_GA2[4,i] = RQA22.TRANS
 
     RQA_mdop1[1,i] = RQA31.ENTR
     RQA_mdop1[2,i] = RQA31.LAM
     RQA_mdop1[3,i] = RQA31.RTE
-    RQA_mdop1[4,i] = transitivity(R31)
+    RQA_mdop1[4,i] = RQA31.TRANS
     RQA_mdop2[1,i] = RQA32.ENTR
     RQA_mdop2[2,i] = RQA32.LAM
     RQA_mdop2[3,i] = RQA32.RTE
-    RQA_mdop2[4,i] = transitivity(R32)
+    RQA_mdop2[4,i] = RQA32.TRANS
 
     RQA_pec1[1,i] = RQA41.ENTR
     RQA_pec1[2,i] = RQA41.LAM
     RQA_pec1[3,i] = RQA41.RTE
-    RQA_pec1[4,i] = transitivity(R41)
+    RQA_pec1[4,i] = RQA41.TRANS
     RQA_pec2[1,i] = RQA42.ENTR
     RQA_pec2[2,i] = RQA42.LAM
     RQA_pec2[3,i] = RQA42.RTE
-    RQA_pec2[4,i] = transitivity(R42)
+    RQA_pec2[4,i] = RQA42.TRANS
 end
 
 # save results

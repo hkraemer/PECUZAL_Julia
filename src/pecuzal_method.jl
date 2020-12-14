@@ -6,6 +6,9 @@ using DrWatson
 using DelayEmbeddings
 using DynamicalSystemsBase
 using Random
+using Neighborhood
+using StatsBase
+using Distances
 
 export pecuzal_embedding
 
@@ -420,4 +423,143 @@ function get_maxima(s::Vector{T}) where {T}
         maximas, maximas_idx = findmax(s)
     end
     return maximas, maximas_idx
+end
+
+
+function uzal_cost2(Y::Dataset{D, ET};
+        Tw::Int = 40, K::Int = 3, w::Int = 1, samplesize::Real = 0.5,
+        metric = Euclidean(), fid = 10
+    ) where {D, ET}
+
+    # select a random state space vector sample according to input samplesize
+    NN = length(Y)-Tw;
+    NNN = floor(Int, samplesize*NN)
+    ns = sample(1:NN, NNN; replace=false) # the fiducial point indices
+    Es = zeros(Tw)
+    eps = 0
+
+    vs = Y[ns] # the fiducial points in the data set
+
+    vtree = KDTree(Y[1:end-Tw], metric)
+    allNNidxs, allNNdist = DelayEmbeddings.all_neighbors(vtree, vs, ns, K, w)
+    ϵ² = zeros(NNN)             # neighborhood size
+    E²_avrg = zeros(NNN)        # averaged conditional variance
+    E² = zeros(Tw)
+    ϵ_ball = zeros(ET, K+1, D) # preallocation
+    u_k = zeros(ET, D)
+
+    # loop over each fiducial point
+    for (i,v) in enumerate(vs)
+        NNidxs = allNNidxs[i] # indices of k nearest neighbors to v
+        # pairwise distance of fiducial points and `v`
+        pdsqrd = fiducial_pairwise_dist_sqrd(view(Y.data, NNidxs), v, metric)
+        ϵ²[i] = (2/(K*(K+1))) * pdsqrd  # Eq. 16
+        # loop over the different time horizons
+        for T = 1:Tw
+            E²[T] = comp_Ek2!(ϵ_ball, u_k, Y, ns[i], NNidxs, T, K, metric) # Eqs. 13 & 14
+        end
+        if i == fid
+            Es = E²
+            eps = ϵ²[i]
+        end
+        # Average E²[T] over all prediction horizons
+        E²_avrg[i] = mean(E²)                   # Eq. 15
+    end
+    σ² = E²_avrg ./ ϵ² # noise amplification σ², Eq. 17
+    σ²_avrg = mean(σ²) # averaged value of the noise amplification, Eq. 18
+    α² = 1 / sum(ϵ².^(-1)) # for normalization, Eq. 21
+    L = log10(sqrt(σ²_avrg)*sqrt(α²))
+    return L, Es, eps
+end
+
+function fiducial_pairwise_dist_sqrd(fiducials, v, metric)
+    pd = zero(eltype(fiducials[1]))
+    pd += evaluate(metric, v, v)^2
+    for (i, v1) in enumerate(fiducials)
+        pd += evaluate(metric, v1, v)^2
+        for j in i+1:length(fiducials)
+            @inbounds pd += evaluate(metric, v1, fiducials[j])^2
+        end
+    end
+    return sum(pd)
+end
+
+"""
+    comp_Ek2!(ϵ_ball,u_k,Y,v,NNidxs,T,K,metric) → E²(T)
+Returns the approximated conditional variance for a specific point in state space
+`ns` (index value) with its `K`-nearest neighbors, which indices are stored in
+`NNidxs`, for a time horizon `T`. This corresponds to Eqs. 13 & 14 in [^Uzal2011].
+The norm specified in input parameter `metric` is used for distance computations.
+"""
+function comp_Ek2!(ϵ_ball, u_k, Y, ns::Int, NNidxs, T::Int, K::Int, metric)
+    # determine neighborhood `T` time steps ahead
+    ϵ_ball[1, :] .= Y[ns+T]
+    @inbounds for (i, j) in enumerate(NNidxs)
+        ϵ_ball[i+1, :] .= Y[j + T]
+    end
+
+    # compute center of mass
+    @inbounds for i in 1:size(Y)[2]; u_k[i] = sum(view(ϵ_ball, :, i))/(K+1); end # Eq. 14
+
+    E²_sum = 0
+    @inbounds for j = 1:K+1
+        E²_sum += (evaluate(metric, view(ϵ_ball, j, :), u_k))^2
+    end
+    E² = E²_sum / (K+1)         # Eq. 13
+end
+
+
+"""
+    uzal_cost_local(Y::Dataset; kwargs...) → L_local
+Compute the local L-statistic `L_local` for input dataset `Y` according to
+Uzal et al.[^Uzal2011]. The length of `L_local` is `length(Y)-Tw` and
+denotes a value of the local cost-function to each of the points of the
+state space trajectory.
+
+In contrast to [`uzal_cost`](@ref) `σ²` here does not get averaged over all the
+state space reference points on the attractor. Therefore, the mean of 'L_local'
+is different to `L`, when calling `uzal_cost`, since the averaging is performed
+before logarithmizing.
+
+Keywords as in [`uzal_cost`](@ref).
+
+[^Uzal2011]: Uzal, L. C., Grinblat, G. L., Verdes, P. F. (2011). [Optimal reconstruction of dynamical systems: A noise amplification approach. Physical Review E 84, 016223](https://doi.org/10.1103/PhysRevE.84.016223).
+"""
+function uzal_cost_local(Y::Dataset{D, ET};
+        Tw::Int = 40, K::Int = 3, w::Int = 1, samplesize::Real = 0.5,
+        metric = Euclidean()
+    ) where {D, ET}
+
+    # select a random state space vector sample according to input samplesize
+    NN = length(Y)-Tw;
+    NNN = floor(Int, samplesize*NN)
+    ns = sample(1:NN, NNN; replace=false) # the fiducial point indices
+
+    vs = Y[ns] # the fiducial points in the data set
+
+    vtree = KDTree(Y[1:end-Tw], metric)
+    allNNidxs, allNNdist = all_neighbors(vtree, vs, ns, K, w)
+    ϵ² = zeros(NNN)             # neighborhood size
+    E²_avrg = zeros(NNN)        # averaged conditional variance
+    E² = zeros(Tw)
+    ϵ_ball = zeros(ET, K+1, D) # preallocation
+    u_k = zeros(ET, D)
+
+    # loop over each fiducial point
+    for (i,v) in enumerate(vs)
+        NNidxs = allNNidxs[i] # indices of k nearest neighbors to v
+        # pairwise distance of fiducial points and `v`
+        pdsqrd = fiducial_pairwise_dist_sqrd(view(Y.data, NNidxs), v, metric)
+        ϵ²[i] = (2/(K*(K+1))) * pdsqrd  # Eq. 16
+        # loop over the different time horizons
+        for T = 1:Tw
+            E²[T] = comp_Ek2!(ϵ_ball, u_k, Y, ns[i], NNidxs, T, K, metric) # Eqs. 13 & 14
+        end
+        # Average E²[T] over all prediction horizons
+        E²_avrg[i] = mean(E²)                   # Eq. 15
+    end
+    σ² = E²_avrg ./ ϵ² # noise amplification σ², Eq. 17
+    α² = 1 / sum(ϵ².^(-1)) # for normalization, Eq. 21
+    L_local = log10.(sqrt.(σ²).*sqrt(α²))
+    return L_local
 end

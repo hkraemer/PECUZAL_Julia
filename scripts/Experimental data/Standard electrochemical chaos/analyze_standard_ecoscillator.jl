@@ -6,7 +6,7 @@ using DelimitedFiles
 using StatsBase
 using HypothesisTests
 
-include("../../../src/pecora_uzal_method.jl")
+include("../../../src/pecuzal_method.jl")
 include("../../../src/data_analysis_functions.jl")
 
 ## We analyze the reconstruction from standard time delay embedding, the
@@ -35,23 +35,23 @@ RQA_pec2 = readdlm("./scripts/Experimental data/Standard electrochemical chaos/R
 using Plots
 
 p1 = histogram(RQA_tde1[1,:],title = "TDE 1 ENTR")
-p2 = histogram(RQA_tde1[1,:],title = "GA 1 ENTR")
-p3 = histogram(RQA_tde1[1,:],title = "MDOP 1 ENTR")
-p4 = histogram(RQA_tde1[1,:],title = "PEC 1 ENTR")
+p2 = histogram(RQA_GA1[1,:],title = "GA 1 ENTR")
+p3 = histogram(RQA_mdop1[1,:],title = "MDOP 1 ENTR")
+p4 = histogram(RQA_pec1[1,:],title = "PEC 1 ENTR")
 p5 = histogram(RQA_tde2[1,:],title = "TDE 2 ENTR")
-p6 = histogram(RQA_tde2[1,:],title = "GA 2 ENTR")
-p7 = histogram(RQA_tde2[1,:],title = "MDOP 2 ENTR")
-p8 = histogram(RQA_tde2[1,:],title = "PEC 2 ENTR")
+p6 = histogram(RQA_GA2[1,:],title = "GA 2 ENTR")
+p7 = histogram(RQA_mdop2[1,:],title = "MDOP 2 ENTR")
+p8 = histogram(RQA_pec2[1,:],title = "PEC 2 ENTR")
 plot(p1,p2,p3,p4,p5,p6,p7,p8,layout = (2, 4), legend = false)
 
-p1 = histogram(RQA_tde1[2,:],title = "TDE 1 TRANS")
-p2 = histogram(RQA_tde1[2,:],title = "GA 1 TRANS")
-p3 = histogram(RQA_tde1[2,:],title = "MDOP 1 TRANS")
-p4 = histogram(RQA_tde1[2,:],title = "PEC 1 TRANS")
-p5 = histogram(RQA_tde2[2,:],title = "TDE 2 TRANS")
-p6 = histogram(RQA_tde2[2,:],title = "GA 2 TRANS")
-p7 = histogram(RQA_tde2[2,:],title = "MDOP 2 TRANS")
-p8 = histogram(RQA_tde2[2,:],title = "PEC 2 TRANS")
+p1 = histogram(RQA_tde1[4,:],title = "TDE 1 TRANS")
+p2 = histogram(RQA_GA1[4,:],title = "GA 1 TRANS")
+p3 = histogram(RQA_mdop1[4,:],title = "MDOP 1 TRANS")
+p4 = histogram(RQA_pec1[4,:],title = "PEC 1 TRANS")
+p5 = histogram(RQA_tde2[4,:],title = "TDE 2 TRANS")
+p6 = histogram(RQA_GA2[4,:],title = "GA 2 TRANS")
+p7 = histogram(RQA_mdop2[4,:],title = "MDOP 2 TRANS")
+p8 = histogram(RQA_pec2[4,:],title = "PEC 2 TRANS")
 plot(p1,p2,p3,p4,p5,p6,p7,p8,layout = (2, 4), legend = false)
 
 med_TDE = zeros(2,4)
@@ -96,8 +96,8 @@ end
 # 2: LAM
 # 3: RTE
 # 4: TRANS
-
-wtest_tde = UnequalVarianceTTest(RQA_tde1[4,:], RQA_tde2[4,:])
-wtest_GA = UnequalVarianceTTest(RQA_GA1[4,:], RQA_GA2[4,:])
-wtest_mdop = UnequalVarianceTTest(RQA_mdop1[4,:], RQA_mdop2[4,:])
-wtest_pec = UnequalVarianceTTest(RQA_pec1[4,:], RQA_pec2[4,:])
+measure = 3
+wtest_tde = UnequalVarianceTTest(RQA_tde1[measure,:], RQA_tde2[measure,:])
+wtest_GA = UnequalVarianceTTest(RQA_GA1[measure,:], RQA_GA2[measure,:])
+wtest_mdop = UnequalVarianceTTest(RQA_mdop1[measure,:], RQA_mdop2[measure,:])
+wtest_pec = UnequalVarianceTTest(RQA_pec1[measure,:], RQA_pec2[measure,:])

@@ -108,6 +108,7 @@ Tw = 0  # time window for obtaining the L-value
 
 # randomly pick one time series
 t_idx = 2
+t_idx = [2,4,6]
 
 u0 = [0.590; 0.766; 0.566; 0.460; 0.794; 0.854; 0.200; 0.298]
 lo96 = Systems.lorenz96(N, u0; F = 3.5)
@@ -140,7 +141,7 @@ w = estimate_delay(data_sample, "mi_min")
 
 include("../src/pecuzal_method.jl")
 theiler = w
-𝒟_pecs, τ_pecs, ts_pecs, Ls_pecs , epss = pecuzal_embedding(data_sample; τs = taus , w = theiler)
+@time 𝒟_pecs, τ_pecs, ts_pecs, Ls_pecs , epss = pecuzal_embedding(data_sample; τs = taus , w = theiler)
 
 Y_act = Dataset(data_sample)
 Y_trial = DelayEmbeddings.hcat_lagged_values(Y_act, data_sample, 6)
@@ -190,3 +191,10 @@ grid()
 
 LL1, LL2 = get_minimum_L_by_separation(Y_act, Y_trial, 0:100;
                     w = w)
+
+
+t = 1:1000
+data = sin.(2*π*t/60)
+w = estimate_delay(data, "mi_min")
+theiler = w
+𝒟_pecs, τ_pecs, ts_pecs, Ls_pecs , epss = pecuzal_embedding(data; τs = 0:50 , w = theiler)

@@ -114,7 +114,7 @@ function pecuzal_embedding(s::Vector{T}; τs = 0:50 , w::Int = 1,
     for i = 2:length(τ_vals[1:end-1])
         Y_final = DelayEmbeddings.hcat_lagged_values(Y_final, s_orig, τ_vals[i])
     end
-    return Y_final, τ_vals[1:end-1], ts_vals[1:end-1], Ls[1:end-1], ε★s[:,1:end-1]
+    return Y_final, τ_vals[1:end-1], ts_vals[1:end-1], Ls[1:end-1], ε★s[:,1:counter-1]
 
 end
 
@@ -145,6 +145,7 @@ function pecuzal_embedding(Y::Dataset{D, T}; τs = 0:50 , w::Int = 1,
     # loop over increasing embedding dimensions until some break criterion will
     # tell the loop to stop/break
     while flag
+        println("Embedding cycle no: $counter")
         Y_act = pecuzal_multivariate_embedding_cycle!(
                 Y_act, flag, Y, τs, w, counter, ε★s, τ_vals, metric,
                 Ls, ts_vals, samplesize, K, α, p, KNN)
@@ -158,7 +159,7 @@ function pecuzal_embedding(Y::Dataset{D, T}; τs = 0:50 , w::Int = 1,
         Y_final = DelayEmbeddings.hcat_lagged_values(Y_final,Y_orig[:,ts_vals[i]],τ_vals[i])
     end
 
-    return Y_final, τ_vals[1:end-1], ts_vals[1:end-1], Ls[1:end-1], ε★s[:,1:end-1]
+    return Y_final, τ_vals[1:end-1], ts_vals[1:end-1], Ls[1:end-1], ε★s[:,1:counter-1]
 
 end
 
@@ -239,9 +240,9 @@ function first_embedding_cycle_pecuzal!(Ys, M, τs, w, samplesize, K,
                                         Ys, τs, KNN, w, samplesize,
                                         metric)
     end
-    # ξ_mini, min_idx = findmin(ξ_min)
-    # L_mini = L_min[min_idx]
-    L_mini, min_idx = findmin(L_min)
+    ξ_mini, min_idx = findmin(ξ_min)
+    L_mini = L_min[min_idx]
+    #L_mini, min_idx = findmin(L_min)
     # update τ_vals, ts_vals, Ls, ε★s
     push!(τ_vals, τs[L_min_idx[min_idx]])
     push!(ts_vals, min_idx)             # time series to start with
@@ -288,6 +289,7 @@ function choose_right_embedding_params!(ε★, Y_act, Ys, τ_vals, ts_vals, Ls, 
     for ts = 1:size(Ys,2)
         # zero-padding of ⟨ε★⟩ in order to also cover τ=0 (important for the multivariate case)
         # get the L-statistic for each peak in ⟨ε★⟩ and take the one according to L_min
+        println("TS-number: $ts")
         L_trials_, max_idx_, _, _ = local_L_statistics(vec([0; ε★[:,ts]]), Y_act, Ys[:,ts],
                                         τs, KNN, w, samplesize, metric)
         L_min_[ts], min_idx_ = findmin(L_trials_)
@@ -325,8 +327,8 @@ function choose_right_embedding_params(ε★, Y_act, Ys, τs, KNN, w, samplesize
         L_act_[ts] = L_acts_[min_idx_]
         τ_idx[ts] = max_idx_[min_idx_]-1
     end
-    #idx = sortperm(ξ_min_)
-    idx = sortperm(L_min_)
+    idx = sortperm(ξ_min_)
+    #idx = sortperm(L_min_)
     return L_min_[idx[1]], τ_idx[idx[1]], idx[1], ξ_min_[idx[1]], L_act_[idx[1]]
 end
 
@@ -353,21 +355,35 @@ end
 
 
 function get_minimum_L_by_separation(Y_act::Dataset{D, T}, Y_trial::Dataset{D2, T}, τs;
-                    K::Int = KNN, w::Int = w, samplesize::Real = samplesize,
-                    metric = metric) where {D, D2, T<:Real}
+                    K::Int = 3, w::Int = 1, samplesize::Real = 1,
+                    metric = Euclidean()) where {D, D2, T<:Real}
     # loop over time horizons until the maximum L-separation is reached
-    L1 = zeros(τs[end])
-    L2 = zeros(τs[end])
+    L1_former = 0
+    L2_former = 0
+    L1 = 0
+    L2 = 0
+    dist = 0
+    dist_former = 99999999
     for Tw = 1:τs[end]
-        L1[Tw] = uzal_cost(Y_act; Tw = Tw, K = KNN, w = w,
+        L1 = uzal_cost(Y_act; Tw = Tw, K = K, w = w,
                 samplesize = samplesize, metric = metric)
-        L2[Tw] = uzal_cost(Y_trial; Tw = Tw, K = KNN, w = w,
+        L2 = uzal_cost(Y_trial; Tw = Tw, K = K, w = w,
                 samplesize = samplesize, metric = metric)
+        dist = L2 - L1
+        if dist > dist_former && dist<0
+            #println("Tw: $Tw")
+            break
+        else
+            L1_former = L1
+            L2_former = L2
+            dist_former = dist
+        end
     end
-    dist = L2 .- L1
-    _, idx = findmin(dist)
-    return L1[idx], L2[idx]
+
+    return L1_former, L2_former
 end
+
+
 
 function pecuzal_break_criterion(Ls, counter, max_num_of_cycles)
     flag = true

@@ -86,11 +86,13 @@ For distance computations the Euclidean norm is used.
 [^Uzal2011]: Uzal, L. C., Grinblat, G. L., Verdes, P. F. (2011). [Optimal reconstruction of dynamical systems: A noise amplification approach. Physical Review E 84, 016223](https://doi.org/10.1103/PhysRevE.84.016223).
 """
 function pecuzal_embedding(s::Vector{T}; τs = 0:50 , w::Int = 1,
-    samplesize::Real = 1, K::Int = 13, KNN::Int = 3,
+    samplesize::Real = 1, K::Int = 13, KNN::Int = 3, threshold::Real = 0,
     α::Real = 0.05, p::Real = 0.5, max_cycles::Int = 50) where {T<:Real}
 
     @assert 0 < samplesize ≤ 1 "Please select a valid `samplesize`, which denotes a fraction of considered fiducial points, i.e. `samplesize` ∈ (0 1]"
     @assert all(x -> x ≥ 0, τs)
+    @assert threshold ≥ 0
+    threshold = -threshold # due to the negativity of L-decrease
     metric = Euclidean()
 
     s_orig = s
@@ -108,13 +110,16 @@ function pecuzal_embedding(s::Vector{T}; τs = 0:50 , w::Int = 1,
     Ls = Float64[]
     ε★s = Array{T}(undef, length(τs), max_cycles)
 
+    println("Hallo")
     # loop over increasing embedding dimensions until some break criterion will
     # tell the loop to stop/break
     while flag
+        println("embedding cycle: $counter")
         Y_act = pecuzal_embedding_cycle!(
                 Y_act, flag, s, τs, w, counter, ε★s, τ_vals, metric,
                 Ls, ts_vals, samplesize, K, α, p, KNN)
-        flag = pecuzal_break_criterion(Ls, counter, max_cycles)
+        println("Ls: $Ls")
+        flag = pecuzal_break_criterion(Ls, counter, max_cycles, threshold)
         counter += 1
     end
     # construct final reconstruction vector
@@ -128,11 +133,13 @@ function pecuzal_embedding(s::Vector{T}; τs = 0:50 , w::Int = 1,
 end
 
 function pecuzal_embedding(Y::Dataset{D, T}; τs = 0:50 , w::Int = 1,
-    samplesize::Real = 1, K::Int = 13, KNN::Int = 3,
+    samplesize::Real = 1, K::Int = 13, KNN::Int = 3, threshold::Real = 0,
     α::Real = 0.05, p::Real = 0.5, max_cycles::Int = 50) where {D, T<:Real}
 
     @assert 0 < samplesize ≤ 1 "Please select a valid `samplesize`, which denotes a fraction of considered fiducial points, i.e. `samplesize` ∈ (0 1]"
     @assert all(x -> x ≥ 0, τs)
+    @assert threshold ≥ 0
+    threshold = -threshold # due to the negativity of L-decrease
     metric = Euclidean()
 
     Y_orig = Y
@@ -158,7 +165,7 @@ function pecuzal_embedding(Y::Dataset{D, T}; τs = 0:50 , w::Int = 1,
                 Y_act, flag, Y, τs, w, counter, ε★s, τ_vals, metric,
                 Ls, ts_vals, samplesize, K, α, p, KNN)
 
-        flag = pecuzal_break_criterion(Ls, counter, max_cycles)
+        flag = pecuzal_break_criterion(Ls, counter, max_cycles, threshold)
         counter += 1
     end
     # construct final reconstruction vector
@@ -334,6 +341,7 @@ function local_L_statistics(ε★, Y_act, s, τs, KNN, w, samplesize, metric)
     maxima, max_idx = get_maxima(ε★) # determine local maxima in ⟨ε★⟩
     L_decrease = zeros(Float64, length(max_idx))
     for (i,τ_idx) in enumerate(max_idx)
+        println("τ value $τ_idx for the maximum $maxima")
         # create candidate phase space vector for this peak/τ-value
         Y_trial = DelayEmbeddings.hcat_lagged_values(Y_act, s, τs[τ_idx-1])
         # compute L-statistic for Y_act and Y_trial and get the maximum decrease
@@ -345,14 +353,14 @@ end
 
 
 
-function pecuzal_break_criterion(Ls, counter, max_num_of_cycles)
+function pecuzal_break_criterion(Ls, counter, max_num_of_cycles, threshold)
     flag = true
-    if counter == 1 && Ls[end] > 0
+    if counter == 1 && Ls[end] > threshold
         println("Algorithm stopped due to increasing L-values. "*
                 "Valid embedding NOT achieved ⨉.")
         flag = false
     end
-    if counter > 1 && Ls[end] > 0
+    if counter > 1 && Ls[end] > threshold
         println("Algorithm stopped due to minimum L-value reached. "*
                 "VALID embedding achieved ✓.")
         flag = false
@@ -471,16 +479,16 @@ function uzal_cost_pecuzal(Y::Dataset{D, ET}, Y_trial::Dataset{DT, ET}, Tw_max::
     vs = Y[ns] # the fiducial points in the data sets
     vs_trial = Y_trial[ns]
 
-    vtree = KDTree(Y[1:end-Tw_max], metric)
-    vtree_trial = KDTree(Y_trial[1:end-Tw_max], metric)
+    vtree = KDTree(Y[1:NN], metric)
+    vtree_trial = KDTree(Y_trial[1:NN], metric)
     allNNidxs, allNNdist = all_neighbors(vtree, vs, ns, K, w)
     allNNidxs_trial, allNNdist_trial = all_neighbors(vtree_trial, vs_trial, ns, K, w)
     ϵ² = zeros(NNN)             # neighborhood size
     ϵ²_trial = zeros(NNN)
     E²_avrg = zeros(NNN)        # averaged conditional variance
     E²_avrg_trial = zeros(NNN)
-    E² = zeros(NNN, Tw_max-1)
-    E²_trial = zeros(NNN, Tw_max-1)
+    E² = zeros(NNN, Tw_max)
+    E²_trial = zeros(NNN, Tw_max)
     ϵ_ball = zeros(ET, K+1, D) # preallocation
     ϵ_ball_trial = zeros(ET, K+1, DT) # preallocation
     u_k = zeros(ET, D)
@@ -488,7 +496,7 @@ function uzal_cost_pecuzal(Y::Dataset{D, ET}, Y_trial::Dataset{DT, ET}, Tw_max::
     dist_former = 99999999 # intial L-decrease
 
     # loop over the different time horizons
-    for (cnt, T) in enumerate(2:Tw_max)
+    for (cnt, T) in enumerate(1:Tw_max)
         # loop over each fiducial point
         for (i,v) in enumerate(vs)
             NNidxs = allNNidxs[i] # indices of k nearest neighbors to v
@@ -518,8 +526,12 @@ function uzal_cost_pecuzal(Y::Dataset{D, ET}, Y_trial::Dataset{DT, ET}, Tw_max::
 
         # compute distance of L-values and check whether that distance can be
         # increased with respect to the given threshold
+        println("Tw=$T, L_trial= $L_trial, L=$L")
         dist = L_trial - L
         if dist > dist_former && dist_former<0
+            println("Tw and max dist:")
+            println(cnt)
+            println(dist_former)
             break
         else
             dist_former = dist
@@ -527,6 +539,7 @@ function uzal_cost_pecuzal(Y::Dataset{D, ET}, Y_trial::Dataset{DT, ET}, Tw_max::
     end
     # return the (first) maximum L-decrease
     return dist_former
+
 end
 
 

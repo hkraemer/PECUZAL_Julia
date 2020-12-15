@@ -8,6 +8,7 @@ using DelayEmbeddings
 using DynamicalSystemsBase
 using Test
 using DelimitedFiles
+using Random
 
 include("../src/pecuzal_method.jl")
 
@@ -57,7 +58,7 @@ Tmax = 100
 samplesize = 1
 
 @time Y, τ_vals, ts_vals, Ls , ε★ = pecuzal_embedding(tr[1:5000,:];
-                                    τs = 0:Tmax , w = w, samplesize = samplesize)
+                                     τs = 0:Tmax , w = w, samplesize = samplesize)
 
 @test length(ts_vals) == 5
 @test ts_vals[3] == ts_vals[4] == ts_vals[5] == 1
@@ -73,6 +74,12 @@ samplesize = 1
 @test -0.0144 < Ls[4] < -0.0143
 
 # Dummy input
+include("../src/pecuzal_method.jl")
+Random.seed!(1234)
+d1 = randn(1000)
+d2 = rand(1000)
+d1 = randn(1000)
+d2 = rand(1000)
 d1 = randn(1000)
 d2 = rand(1000)
 dummy_set = Dataset(hcat(d1,d2))
@@ -81,13 +88,44 @@ w1 = estimate_delay(d1, "mi_min")
 w2 = estimate_delay(d2, "mi_min")
 w = w1
 
+
 @time Y, τ_vals, ts_vals, Ls , ε★ = pecuzal_embedding(dummy_set;
                                     τs = 0:Tmax , w = w, samplesize = samplesize)
+
+@time Y, τ_vals, ts_vals, Ls , ε★ = pecuzal_embedding(d1;
+                                    τs = 0:Tmax , w = w, samplesize = samplesize, max_cycles=5)
 
 @test size(Y,2) == 1
 # end
 #
 # end
+
+
+
+s = regularize(Dataset(d1))
+Y_t = DelayEmbeddings.hcat_lagged_values(s, vec(Matrix(s)), 4)
+
+uzal_cost(s; Tw = 1, w = 1, samplesize = 1)
+uzal_cost(Y_t; Tw = 1, w = 1, samplesize = 1)
+
+L1 = zeros(100)
+L2 = zeros(100)
+for T = 1:100
+    L1[T] = uzal_cost(s; Tw = T, w = 1, samplesize = 1)
+    L2[T] = uzal_cost(Y_t; Tw = T, w = 1, samplesize = 1)
+end
+
+using PyPlot
+pygui(true)
+
+figure()
+plot(1:100, L1, label="1")
+plot(1:100, L2, label="2")
+plot(1:100, L2.-L1, label="diff")
+legend()
+grid()
+
+
 
 include("../src/pecuzal_method.jl")
 idx = 487
@@ -116,27 +154,7 @@ set_parameter!(lo96, 1, F)
 data = trajectory(lo96, total*dt; dt = dt, Ttr = 2500 * dt)
 data_sample = data[:,t_idx]
 
-function space_time_separation(x::Vector{P}, Tw::Int, percentile::Real) where {P}
-    N = length(x)
-    sts = zeros(Tw+1)
-    cnt = 1
-    for T = 0:Tw
-        sts[cnt] = quantile(abs.(view(x, 1:N-T) .- view(x, 1+T:N)), percentile)
-        cnt += 1
-    end
-    return sts
-end
-
-sps = zeros(Tw+1,5)
-for (i, perc) in enumerate([.5; .7; .9; .95; .99])
-    sps[:,i] = space_time_separation(data_sample, 100, perc)
-end
-figure()
-plot(0:100, sps)
-grid()
-
 w = estimate_delay(data_sample, "mi_min")
-
 
 include("../src/pecuzal_method.jl")
 theiler = w

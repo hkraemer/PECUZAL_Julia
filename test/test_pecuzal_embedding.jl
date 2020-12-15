@@ -29,8 +29,8 @@ KNN = 3
                                     τs = 0:Tmax , w = w, samplesize = samplesize,
                                     K = K, KNN = KNN)
 
-@test -0.7256 < Ls[1] < -0.7255
-@test -0.317 < Ls[2] < -0.3169
+@test -0.7264 < Ls[1] < -0.7263
+@test -0.3237 < Ls[2] < -0.3236
 
 @test τ_vals[2] == 18
 @test τ_vals[3] == 9
@@ -67,9 +67,9 @@ samplesize = 1
 @test τ_vals[3] == 62
 @test τ_vals[4] == 48
 @test τ_vals[5] == 0
-@test -0.9336 < Ls[1] < -0.9335
-@test -0.3514 < Ls[2] < -0.3513
-@test -0.1228 < Ls[3] < -0.1227
+@test -0.9362 < Ls[1] < -0.9361
+@test -0.3552 < Ls[2] < -0.3551
+@test -0.1293 < Ls[3] < -0.1292
 @test -0.0144 < Ls[4] < -0.0143
 
 # Dummy input

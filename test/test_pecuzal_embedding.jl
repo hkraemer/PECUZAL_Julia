@@ -30,7 +30,7 @@ println("\nTesting pecuzal_method.jl...")
                                         τs = 0:Tmax , w = w, samplesize = samplesize,
                                         K = K, KNN = KNN)
 
-    @test -0.727 < Ls[1] < -0.726
+    @test -0.728 < Ls[1] < -0.727
     @test -0.323 < Ls[2] < -0.322
 
     @test τ_vals[2] == 18

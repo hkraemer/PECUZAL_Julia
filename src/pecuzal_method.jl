@@ -110,15 +110,12 @@ function pecuzal_embedding(s::Vector{T}; τs = 0:50 , w::Int = 1,
     Ls = Float64[]
     ε★s = Array{T}(undef, length(τs), max_cycles)
 
-    println("Hallo")
     # loop over increasing embedding dimensions until some break criterion will
     # tell the loop to stop/break
     while flag
-        println("embedding cycle: $counter")
         Y_act = pecuzal_embedding_cycle!(
                 Y_act, flag, s, τs, w, counter, ε★s, τ_vals, metric,
                 Ls, ts_vals, samplesize, K, α, p, KNN)
-        println("Ls: $Ls")
         flag = pecuzal_break_criterion(Ls, counter, max_cycles, threshold)
         counter += 1
     end
@@ -341,27 +338,25 @@ function local_L_statistics(ε★, Y_act, s, τs, KNN, w, samplesize, metric)
     maxima, max_idx = get_maxima(ε★) # determine local maxima in ⟨ε★⟩
     L_decrease = zeros(Float64, length(max_idx))
     for (i,τ_idx) in enumerate(max_idx)
-        println("τ value $τ_idx for the maximum $maxima")
         # create candidate phase space vector for this peak/τ-value
         Y_trial = DelayEmbeddings.hcat_lagged_values(Y_act, s, τs[τ_idx-1])
         # compute L-statistic for Y_act and Y_trial and get the maximum decrease
         L_decrease[i] = uzal_cost_pecuzal(Y_act, Y_trial, τs[end]; K = KNN,
-                                w = w, samplesize = samplesize, metric = metric)
+                                w = w, metric = metric)
     end
     return L_decrease, max_idx
 end
 
 
-
 function pecuzal_break_criterion(Ls, counter, max_num_of_cycles, threshold)
     flag = true
     if counter == 1 && Ls[end] > threshold
-        println("Algorithm stopped due to increasing L-values. "*
+        println("Algorithm stopped due to increasing L-values in the first embedding cycle. "*
                 "Valid embedding NOT achieved ⨉.")
         flag = false
     end
     if counter > 1 && Ls[end] > threshold
-        println("Algorithm stopped due to minimum L-value reached. "*
+        println("Algorithm stopped due to increasing L-values. "*
                 "VALID embedding achieved ✓.")
         flag = false
     end
@@ -413,21 +408,18 @@ end
 
 
 """
-    uzal_cost_pecuzal(Y::Dataset; kwargs...) → L
-Compute the L-statistic `L` for input dataset `Y` according to Uzal et al.[^Uzal2011], based on
-theoretical arguments on noise amplification, the complexity of the
-reconstructed attractor and a direct measure of local stretch which constitutes
-an irrelevance measure. It serves as a cost function of a state space
-trajectory/embedding and therefore allows to estimate a "goodness of a
-embedding" and also to choose proper embedding parameters, while minimizing
-`L` over the parameter space. For receiving the local cost function `L_local`
-(for each point in state space - not averaged), use `uzal_cost_local(...)`.
+    uzal_cost_pecuzal(Y1::Dataset, Y2::Dataset, Tw; kwargs...) → L_decrease
+This function is based on the functionality of [`uzal_cost`](@ref), here
+specifically tailored for the needs in the PECUZAL algorithm.
+Compute the L-statistics `L1` and `L2` for the input datasets `Y1` and `Y2` for
+increasing time horizons `T = 1:Tw`. For each `T`, compute `L1` and `L2` and
+decrease `L_decrease = L2 - L1`. If `L_decrease` is a negative value, then `Y2`
+can be regarded as a "better" reconstruction that `Y1`. Break, when `L_decrease`
+reaches the 1st local minima, since this will typically also be the global
+minimum. Return the according minimum `L_decrease`-value.
 
 ## Keyword arguments
 
-* `samplesize = 0.5`: Number of considered fiducial points v as a fraction of
-  input state space trajectory `Y`'s length, in order to average the conditional
-  variances and neighborhood sizes (read algorithm description) to produce `L`.
 * `K = 3`: the amount of nearest neighbors considered, in order to compute σ_k^2
   (read algorithm description).
   If given a vector, minimum result over all `k ∈ K` is returned.
@@ -436,112 +428,100 @@ embedding" and also to choose proper embedding parameters, while minimizing
 * `w = 1`: Theiler window (neighbors in time with index `w` close to the point,
   that are excluded from being true neighbors). `w=0` means to exclude only the
   point itself, and no temporal neighbors.
-* `Tw = 40`: The time horizon (in sampling units) up to which E_k^2 gets computed
-  and averaged over (read algorithm description).
-
-## Description
-The `L`-statistic is based on theoretical arguments on noise amplification, the
-complexity of the reconstructed attractor and a direct measure of local stretch
-which constitutes an irrelevance measure. Technically, it is the logarithm of
-the product of `σ`-statistic and a normalization statistic `α`:
-
-L = log10(σ*α)
-
-The `σ`-statistic is computed as follows. `σ = √σ² = √(E²/ϵ²)`.
-`E²` approximates the conditional variance at each point in state space and
-for a time horizon `T ∈ Tw`, using `K` nearest neighbors. For each reference
-point of the state space trajectory, the neighborhood consists of the reference
-point itself and its `K+1` nearest neighbors. `E²` measures how strong
-a neighborhood expands during `T` time steps. `E²` is averaged over many time
-horizons `T = 1:Tw`. Consequently, `ϵ²` is the size of the neighborhood at the
-reference point itself and is defined as the mean pairwise distance of the
-neighborhood. Finally, `σ²` gets averaged over a range of reference points on
-the attractor, which is controlled by `samplesize`. This is just for performance
-reasons and the most accurate result will obviously be gained when setting
-`samplesize=1.0`
-
-The `α`-statistic is a normalization factor, such that `σ`'s from different
-embeddings can be compared. `α²` is defined as the inverse of the sum of
-the inverse of all `ϵ²`'s for all considered reference points.
-
-[^Uzal2011]: Uzal, L. C., Grinblat, G. L., Verdes, P. F. (2011). [Optimal reconstruction of dynamical systems: A noise amplification approach. Physical Review E 84, 016223](https://doi.org/10.1103/PhysRevE.84.016223).
 """
-function uzal_cost_pecuzal(Y::Dataset{D, ET}, Y_trial::Dataset{DT, ET}, Tw_max::Int;
-        K::Int = 3, w::Int = 1, samplesize::Real = 0.5, metric = Euclidean()
+function uzal_cost_pecuzal(Y::Dataset{D, ET}, Y_trial::Dataset{DT, ET}, Tw::Int;
+        K::Int = 3, w::Int = 1, metric = Euclidean()
     ) where {D, DT, ET}
 
     @assert DT == D+1
-    # select a random state space vector sample according to input samplesize
-    NN = length(Y_trial)-Tw_max;
-    NNN = floor(Int, samplesize*NN)
-    ns = sample(1:NN, NNN; replace=false) # the fiducial point indices
+    @assert Tw ≥ 0
 
-    vs = Y[ns] # the fiducial points in the data sets
-    vs_trial = Y_trial[ns]
-
-    vtree = KDTree(Y[1:NN], metric)
-    vtree_trial = KDTree(Y_trial[1:NN], metric)
-    allNNidxs, allNNdist = all_neighbors(vtree, vs, ns, K, w)
-    allNNidxs_trial, allNNdist_trial = all_neighbors(vtree_trial, vs_trial, ns, K, w)
+    NNN = length(Y_trial)-1;
+    # preallocation for 1st dataset
     ϵ² = zeros(NNN)             # neighborhood size
-    ϵ²_trial = zeros(NNN)
     E²_avrg = zeros(NNN)        # averaged conditional variance
-    E²_avrg_trial = zeros(NNN)
-    E² = zeros(NNN, Tw_max)
-    E²_trial = zeros(NNN, Tw_max)
-    ϵ_ball = zeros(ET, K+1, D) # preallocation
-    ϵ_ball_trial = zeros(ET, K+1, DT) # preallocation
-    u_k = zeros(ET, D)
-    u_k_trial = zeros(ET, DT)
-    dist_former = 99999999 # intial L-decrease
+    E² = zeros(NNN, Tw)         # conditional variance
+    ϵ_ball = zeros(ET, K+1, D)  # epsilon neighbourhood
+    u_k = zeros(ET, D)          # center of mass
+    # preallocation for 2nd dataset
+    ϵ²_trial = zeros(NNN)             # neighborhood size
+    E²_avrg_trial = zeros(NNN)        # averaged conditional variance
+    E²_trial = zeros(NNN, Tw)         # conditional variance
+    ϵ_ball_trial = zeros(ET, K+1, DT) # epsilon neighbourhood
+    u_k_trial = zeros(ET, DT)         # center of mass
 
-    # loop over the different time horizons
-    for (cnt, T) in enumerate(1:Tw_max)
-        # loop over each fiducial point
-        for (i,v) in enumerate(vs)
-            NNidxs = allNNidxs[i] # indices of k nearest neighbors to v
-            NNidxs_trial = allNNidxs_trial[i] # indices of k nearest neighbors to v_trial
+    dist_former = 9999999 # intial L-decrease
 
-            # pairwise distance of fiducial points and `v`
-            pdsqrd = fiducial_pairwise_dist_sqrd(view(Y.data, NNidxs), v, metric)
-            ϵ²[i] = (2/(K*(K+1))) * pdsqrd  # Eq. 16
-            pdsqrd = fiducial_pairwise_dist_sqrd(view(Y_trial.data, NNidxs_trial), vs_trial[i], metric)
-            ϵ²_trial[i] = (2/(K*(K+1))) * pdsqrd  # Eq. 16
+    # loop over each time horizon
+    cnt = 1
+    for T = 2:Tw    # start at 2 will eliminate results for noise
+        NN = length(Y_trial)-T;
+        ns = 1:NN
 
-            E²[i,cnt] = comp_Ek2!(ϵ_ball, u_k, Y, ns[i], NNidxs, T, K, metric) # Eqs. 13 & 14
-            E²_trial[i,cnt] = comp_Ek2!(ϵ_ball_trial, u_k_trial, Y_trial, ns[i], NNidxs_trial, T, K, metric) # Eqs. 13 & 14
-        end
-        # Average E²[T] over all prediction horizons
-        E²_avrg = mean(E²[:,1:cnt], dims=2)                   # Eq. 15
-        E²_avrg_trial = mean(E²_trial[:,1:cnt], dims=2)       # Eq. 15
+        vs = Y[ns] # the fiducial points in the data set
+        vs_trial = Y_trial[ns] # the fiducial points in the data set
 
-        σ² = E²_avrg ./ ϵ² # noise amplification σ², Eq. 17
-        σ²_trial = E²_avrg_trial ./ ϵ²_trial # noise amplification σ², Eq. 17
-        σ²_avrg = mean(σ²) # averaged value of the noise amplification, Eq. 18
-        σ²_avrg_trial = mean(σ²_trial) # averaged value of the noise amplification, Eq. 18
-        α² = 1 / sum(ϵ².^(-1)) # for normalization, Eq. 21
-        α²_trial = 1 / sum(ϵ²_trial.^(-1)) # for normalization, Eq. 21
-        L = log10(sqrt(σ²_avrg)*sqrt(α²))
-        L_trial = log10(sqrt(σ²_avrg_trial)*sqrt(α²_trial))
+        vtree = KDTree(Y[1:NN], metric)
+        allNNidxs, allNNdist = all_neighbors(vtree, vs, ns, K, w)
+        vtree_trial = KDTree(Y_trial[1:NN], metric)
+        allNNidxs_trial, allNNdist_trial = all_neighbors(vtree_trial, vs_trial, ns, K, w)
+
+        # compute conditional variances and neighborhood-sizes
+        compute_conditional_variances!(ns, vs, vs_trial, allNNidxs,
+            allNNdist, allNNidxs_trial, allNNdist_trial, Y, Y_trial, ϵ_ball,
+            ϵ_ball_trial, u_k, u_k_trial, T, K, metric, ϵ², ϵ²_trial, E²,
+            E²_trial, cnt)
 
         # compute distance of L-values and check whether that distance can be
-        # increased with respect to the given threshold
-        println("Tw=$T, L_trial= $L_trial, L=$L")
-        dist = L_trial - L
+        # increased
+        dist = compute_L_decrease(E², E²_trial, ϵ², ϵ²_trial, cnt, NN)
         if dist > dist_former && dist_former<0
-            println("Tw and max dist:")
-            println(cnt)
-            println(dist_former)
             break
         else
             dist_former = dist
         end
+        cnt += 1
     end
-    # return the (first) maximum L-decrease
     return dist_former
-
 end
 
+function compute_conditional_variances!(ns, vs, vs_trial, allNNidxs,
+    allNNdist, allNNidxs_trial, allNNdist_trial, Y, Y_trial, ϵ_ball,
+    ϵ_ball_trial, u_k, u_k_trial, T, K, metric, ϵ², ϵ²_trial, E², E²_trial, cnt)
+
+    # loop over each point on the trajectories
+    for (i,v) in enumerate(vs)
+        NNidxs = allNNidxs[i] # indices of k nearest neighbors to v of 1st dataset
+        NNidxs_trial = allNNidxs_trial[i] # indices of k nearest neighbors to v of 2nd dataset
+        # pairwise distance of fiducial points and all neighbours
+        pdsqrd = fiducial_pairwise_dist_sqrd(view(Y.data, NNidxs), v, metric)
+        ϵ²[i] = (2/(K*(K+1))) * pdsqrd  # Eq. 16
+        pdsqrd_trial = fiducial_pairwise_dist_sqrd(view(Y_trial.data, NNidxs_trial), vs_trial[i], metric)
+        ϵ²_trial[i] = (2/(K*(K+1))) * pdsqrd_trial  # Eq. 16
+
+        E²[i, cnt] = comp_Ek2!(ϵ_ball, u_k, Y, ns[i], NNidxs, T, K, metric) # Eqs. 13 & 14
+        E²_trial[i, cnt] = comp_Ek2!(ϵ_ball_trial, u_k_trial, Y_trial, ns[i], NNidxs_trial, T, K, metric) # Eqs. 13 & 14
+    end
+end
+
+function compute_L_decrease(E², E²_trial, ϵ², ϵ²_trial, T, NN)
+    # 1st dataset
+    # Average E²[T] over all prediction horizons
+    E²_avrg = mean(E²[1:NN,1:T], dims=2)                   # Eq. 15
+    σ² = E²_avrg ./ ϵ²[1:NN] # noise amplification σ², Eq. 17
+    σ²_avrg = mean(σ²) # averaged value of the noise amplification, Eq. 18
+    α² = 1 / sum(ϵ²[1:NN].^(-1)) # for normalization, Eq. 21
+    L = log10(sqrt(σ²_avrg)*sqrt(α²))
+    # 2nd dataset
+    # Average E²[T] over all prediction horizons
+    E²_avrg_trial = mean(E²_trial[1:NN,1:T], dims=2)                   # Eq. 15
+    σ²_trial = E²_avrg_trial ./ ϵ²_trial[1:NN] # noise amplification σ², Eq. 17
+    σ²_avrg_trial = mean(σ²_trial) # averaged value of the noise amplification, Eq. 18
+    α²_trial = 1 / sum(ϵ²_trial[1:NN].^(-1)) # for normalization, Eq. 21
+    L_trial = log10(sqrt(σ²_avrg_trial)*sqrt(α²_trial))
+
+    return L_trial - L
+end
 
 function fiducial_pairwise_dist_sqrd(fiducials, v, metric)
     pd = zero(eltype(fiducials[1]))

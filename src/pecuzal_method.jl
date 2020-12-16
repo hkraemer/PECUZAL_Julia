@@ -179,9 +179,10 @@ end
 """
 Perform one univariate embedding cycle on `Y_act`. Return the new `Y_act`
 """
-function pecuzal_embedding_cycle!(
-        Y_act, flag, s, τs, w, counter, ε★s, τ_vals, metric,
-        Ls, ts_vals, samplesize, K, α, p, KNN)
+function pecuzal_embedding_cycle!(Y_act::Dataset{D, T}, flag::Bool, s::Vector,
+        τs, w::Int, counter::Int, ε★s::AbstractArray, τ_vals::Vector{Int}, metric,
+        Ls::Vector{T}, ts_vals::Vector{Int}, samplesize::Real, K::Int, α::Real,
+        p::Real, KNN::Int) where {D, T}
 
     ε★, _ = pecora(s, Tuple(τ_vals), Tuple(ts_vals); delays = τs, w = w,
                 samplesize = samplesize, K = K, metric = metric, α = α,
@@ -207,9 +208,10 @@ end
 """
 Perform one embedding cycle on `Y_act` with a multivariate set Ys
 """
-function pecuzal_multivariate_embedding_cycle!(
-        Y_act, flag, Ys, τs, w, counter, ε★s, τ_vals, metric,
-        Ls, ts_vals, samplesize, K, α, p, KNN)
+function pecuzal_multivariate_embedding_cycle!(Y_act, flag::Bool,
+        Ys::Dataset{DT, T}, τs, w::Int, counter::Int, ε★s::AbstractMatrix,
+        τ_vals::Vector{Int}, metric, Ls::Vector{T}, ts_vals::Vector{Int},
+        samplesize::Real, K::Int, α::Real, p::Real, KNN::Int) where {D, DT, T}
 
     M = size(Ys,2)
     # in the 1st cycle we have to check all (size(Y,2)^2 combinations and pick
@@ -230,8 +232,10 @@ end
 Perform the first embedding cycle of the multivariate embedding. Return the
 actual reconstruction vector `Y_act`.
 """
-function first_embedding_cycle_pecuzal!(Ys, M, τs, w, samplesize, K,
-                        metric, α, p, KNN, τ_vals, ts_vals, Ls, ε★s)
+function first_embedding_cycle_pecuzal!(Ys::Dataset{D, T}, M::Int, τs, w::Int,
+            samplesize::Real, K::Int, metric, α::Real, p::Real, KNN::Int,
+            τ_vals::Vector{Int}, ts_vals::Vector{Int}, Ls::Vector{T},
+            ε★s::AbstractMatrix) where {D, T}
     counter = 1
     L_min = zeros(M)
     L_act = zeros(M)
@@ -267,8 +271,10 @@ end
 Perform an embedding cycle of the multivariate embedding, but the first one.
 Return the actual reconstruction vector `Y_act`.
 """
-function embedding_cycle_pecuzal!(Y_act, Ys, counter, M, τs, w, samplesize,
-                    K, metric, α, p, KNN, τ_vals, ts_vals, Ls, ε★s)
+function embedding_cycle_pecuzal!(Y_act::Dataset{D, T}, Ys::Dataset{DT, T},
+            counter::Int, M::Int, τs, w::Int, samplesize::Real, K::Int, metric,
+            α::Real, p::Real, KNN::Int, τ_vals::Vector{Int}, ts_vals::Vector{Int},
+            Ls::Vector{T}, ε★s::AbstractMatrix) where {D, DT, T}
 
     ε★, _ = pecora(Ys, Tuple(τ_vals), Tuple(ts_vals); delays = τs, w = w,
             samplesize = samplesize, K = K, metric = metric, α = α,
@@ -287,8 +293,11 @@ end
     Choose the maximum L-decrease and corresponding τ for each ε★-statistic,
 based on picking the peak in ε★, which corresponds to the minimal `L`-statistic.
 """
-function choose_right_embedding_params!(ε★, Y_act, Ys, τ_vals, ts_vals, Ls, ε★s,
-                                 counter, τs, KNN, w, samplesize, metric)
+function choose_right_embedding_params!(ε★::AbstractMatrix, Y_act,
+            Ys::Dataset{D, T}, τ_vals::Vector{Int}, ts_vals::Vector{Int},
+            Ls::Vector{T}, ε★s::AbstractMatrix, counter::Int, τs, KNN::Int,
+            w::Int, samplesize::Real, metric) where {D, T}
+
     L_min_ = zeros(size(Ys,2))
     τ_idx = zeros(Int,size(Ys,2))
     for ts = 1:size(Ys,2)
@@ -314,7 +323,9 @@ embedding cycle. Return the `L`-decrease-value, the corresponding index value of
 the chosen peak `τ_idx` and the number of the chosen time series to start with
 `idx`.
 """
-function choose_right_embedding_params(ε★, Y_act, Ys, τs, KNN, w, samplesize, metric)
+function choose_right_embedding_params(ε★::AbstractMatrix, Y_act,
+            Ys::Dataset{D, T}, τs, KNN::Int, w::Int, samplesize::Real, metric
+            ) where {D, T}
     L_min_ = zeros(size(Ys,2))
     τ_idx = zeros(Int,size(Ys,2))
     for ts = 1:size(Ys,2)
@@ -334,7 +345,8 @@ end
     Return the maximum decrease of the L-statistic `L_decrease` and corresponding
 delay-indices `max_idx` for all local maxima in ε★
 """
-function local_L_statistics(ε★, Y_act, s, τs, KNN, w, samplesize, metric)
+function local_L_statistics(ε★::Vector{T}, Y_act::Dataset{D, T}, s::Vector{T},
+        τs, KNN::Int, w::Int, samplesize::Real, metric) where {D, T}
     maxima, max_idx = get_maxima(ε★) # determine local maxima in ⟨ε★⟩
     L_decrease = zeros(Float64, length(max_idx))
     for (i,τ_idx) in enumerate(max_idx)
@@ -348,7 +360,8 @@ function local_L_statistics(ε★, Y_act, s, τs, KNN, w, samplesize, metric)
 end
 
 
-function pecuzal_break_criterion(Ls, counter, max_num_of_cycles, threshold)
+function pecuzal_break_criterion(Ls::Vector{T}, counter::Int,
+        max_num_of_cycles::Int, threshold::Real) where {T}
     flag = true
     if counter == 1 && Ls[end] > threshold
         println("Algorithm stopped due to increasing L-values in the first embedding cycle. "*
@@ -485,9 +498,12 @@ function uzal_cost_pecuzal(Y::Dataset{D, ET}, Y_trial::Dataset{DT, ET}, Tw::Int;
     return dist_former
 end
 
-function compute_conditional_variances!(ns, vs, vs_trial, allNNidxs,
-    allNNdist, allNNidxs_trial, allNNdist_trial, Y, Y_trial, ϵ_ball,
-    ϵ_ball_trial, u_k, u_k_trial, T, K, metric, ϵ², ϵ²_trial, E², E²_trial, cnt)
+function compute_conditional_variances!(ns, vs, vs_trial, allNNidxs::Vector{Array{Int64,1}},
+        allNNdist::Vector{Array{P,1}}, allNNidxs_trial::Vector{Array{Int64,1}},
+        allNNdist_trial::Vector{Array{P,1}}, Y::Dataset{D, P},
+        Y_trial::Dataset{DT, P}, ϵ_ball::Array{P, 2}, ϵ_ball_trial::Array{P, 2},
+        u_k::Vector{P}, u_k_trial::Vector{P}, T::Int, K::Int, metric, ϵ²::Vector,
+        ϵ²_trial::Vector, E²::Array{P, 2}, E²_trial::Array{P, 2}, cnt::Int) where {P, D, DT}
 
     # loop over each point on the trajectories
     for (i,v) in enumerate(vs)
@@ -504,7 +520,8 @@ function compute_conditional_variances!(ns, vs, vs_trial, allNNidxs,
     end
 end
 
-function compute_L_decrease(E², E²_trial, ϵ², ϵ²_trial, T, NN)
+function compute_L_decrease(E²::Array{P, 2}, E²_trial::Array{P, 2}, ϵ²::Vector{P},
+        ϵ²_trial::Vector{P}, T::Int, NN::Int) where {P}
     # 1st dataset
     # Average E²[T] over all prediction horizons
     E²_avrg = mean(E²[1:NN,1:T], dims=2)                   # Eq. 15
@@ -542,7 +559,9 @@ Returns the approximated conditional variance for a specific point in state spac
 `NNidxs`, for a time horizon `T`. This corresponds to Eqs. 13 & 14 in [^Uzal2011].
 The norm specified in input parameter `metric` is used for distance computations.
 """
-function comp_Ek2!(ϵ_ball, u_k, Y, ns::Int, NNidxs, T::Int, K::Int, metric)
+function comp_Ek2!(ϵ_ball::Array{P, 2}, u_k::Vector{P}, Y::Dataset{D, P},
+        ns::Int, NNidxs::Vector, T::Int, K::Int, metric
+        ) where {D, P}
     # determine neighborhood `T` time steps ahead
     ϵ_ball[1, :] .= Y[ns+T]
     @inbounds for (i, j) in enumerate(NNidxs)

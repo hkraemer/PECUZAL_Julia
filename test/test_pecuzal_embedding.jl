@@ -90,3 +90,54 @@ end
 end
 
 end
+
+# include("../src/pecuzal_method.jl")
+# s = readdlm("./test/timeseries/lorenz_pecora_uni_x.csv")
+# s = vec(s) # input timeseries = x component of lorenz
+# w = estimate_delay(s, "mi_min")
+# Tmax = 100
+# K = 14
+# samplesize = 1
+# KNN = 3
+#
+# @time Y, τ_vals, ts_vals, Ls , εs = pecuzal_embedding(s[1:5000];
+#                                     τs = 0:Tmax , w = w, samplesize = samplesize,
+#                                     K = K, KNN = KNN)
+# @test -0.728 < Ls[1] < -0.727
+# @test -0.323 < Ls[2] < -0.322
+#
+# @test τ_vals[2] == 18
+# @test τ_vals[3] == 9
+#
+# include("../src/pecuzal_method.jl")
+# tr = readdlm("./test/timeseries/lorenz_pecora_multi.csv")
+# tr = Dataset(tr) # input timeseries = x component of lorenz
+# w1 = estimate_delay(tr[:,1], "mi_min")
+# w2 = estimate_delay(tr[:,2], "mi_min")
+# w3 = estimate_delay(tr[:,3], "mi_min")
+# w = w1
+# Tmax = 100
+# samplesize = 1
+#
+# @time Y, τ_vals, ts_vals, Ls , ε★ = pecuzal_embedding(tr[1:5000,:];
+#                                      τs = 0:Tmax , w = w, samplesize = samplesize)
+#
+# @test -0.936 < Ls[1] < -0.935
+# @test -0.356 < Ls[2] < -0.355
+# @test -0.133 < Ls[3] < -0.132
+# @test -0.015 < Ls[4] < -0.014
+#
+#
+# using DelayEmbeddings
+# using DynamicalSystemsBase
+# using Random
+# using Neighborhood
+# using StatsBase
+# using Distances
+#
+# DD = Dataset(s[1:5000])
+# ns = 1:length(DD)
+#
+# vtree = KDTree(DD, Euclidean())
+# allNNidxs, allNNdist = DelayEmbeddings.all_neighbors(vtree, DD, ns, 4, w)
+#

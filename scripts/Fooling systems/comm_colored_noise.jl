@@ -5,6 +5,7 @@ using DifferentialEquations
 using DynamicalSystems
 using DelayEmbeddings
 using DelimitedFiles
+using Random
 
 include("../../src/pecuzal_method.jl")
 include("../../src/data_analysis_functions.jl")
@@ -23,7 +24,7 @@ include("../../src/data_analysis_functions.jl")
 # time series.
 
 ## Generate data
-
+Random.seed!(1234)
 N = 5000 # time series length
 tr = zeros(N,3) # multivariate dataset we will use
 alpha, p = .9, 1.
@@ -45,7 +46,7 @@ w = maximum(hcat(w1,w2,w3))
 taus = 0:100
 
 # L-value of reference
-L_ref = uzal_cost(tr, Tw = (4*w), w = w, samplesize=1)
+L_ref = uzal_cost(tr, Tw = 4*w), w = w, samplesize=1)
 
 #Standard TDE
 @time Y_tde, τ = standard_embedding_cao(tr[:,1])

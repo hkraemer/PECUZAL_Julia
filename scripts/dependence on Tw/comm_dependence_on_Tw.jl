@@ -83,9 +83,9 @@ end
 
 panelnames = ["A" "B" "C"]
 
-fig = figure(figsize=[10,5])
+fig = figure(figsize=[15,5])
 
-lwg = 3         # linewidth of the graph
+lwg = 1.5         # linewidth of the graph
 lwa = 2         # linewidth of the axis
 fsp = 18        # Fontsize of panelnames
 fsa = 12        # Fontsize of the axis
@@ -93,7 +93,7 @@ fsl = 10        # Fontsize of the legendentries
 fst = 20        # Fontsize of title
 axislabelsize = 12 # axislabelsize
 ticklabelsize = 10  # labelsize of ticks
-ms = 30         # markersize of maxima
+ms = 20         # markersize of maxima
 ms_style = "*"  # markerstyle
 
 subplots_adjust(
@@ -122,10 +122,12 @@ merge!(rcParams, font0)
 ax = fig.add_subplot(1, 3, 1)
 p1 = plot(1:Tw, L11, label="time series", linewidth=lwg)
 color1 = p1[1].get_color()
-scatter(1:Tw, L11, label="")
+scatter(1:Tw, L11, ms, label="")
 p2 = plot(1:Tw, L12, label="2-dim embedding", linewidth=lwg)
 color2 = p2[1].get_color()
-scatter(1:Tw, L12, label="")
+scatter(1:Tw, L12, ms, label="")
+ylims = ax.get_ylim()
+ax.fill_between(1:Tw, L11, ylims[1], where = L11 .>= L12, facecolor = "gray", alpha = 0.5)
 legend()
 ax.text(-0.2, 1.1, panelnames[1], transform=ax.transAxes,
      fontsize=fsp, fontweight="bold", va="top")
@@ -137,10 +139,12 @@ grid()
 ax = fig.add_subplot(1, 3, 2)
 p1 = plot(1:Tw, L21, label="time series", linewidth=lwg)
 color1 = p1[1].get_color()
-scatter(1:Tw, L21, label="")
+scatter(1:Tw, L21, ms, label="")
 p2 = plot(1:Tw, L22, label="2-dim embedding", linewidth=lwg)
 color2 = p2[1].get_color()
-scatter(1:Tw, L22, label="")
+scatter(1:Tw, L22, ms, label="")
+ylims = ax.get_ylim()
+ax.fill_between(1:Tw, L21, ylims[1], where = L21 .>= L22, facecolor = "gray", alpha = 0.5)
 #legend()
 ax.text(-0.2, 1.1, panelnames[2], transform=ax.transAxes,
      fontsize=fsp, fontweight="bold", va="top")
@@ -151,10 +155,12 @@ grid()
 ax = fig.add_subplot(1, 3, 3)
 p1 = plot(1:Tw, L31, label="time series", linewidth=lwg)
 color1 = p1[1].get_color()
-scatter(1:Tw, L31, label="")
+scatter(1:Tw, L31, ms, label="")
 p2 = plot(1:Tw, L32, label="2-dim embedding", linewidth=lwg)
 color2 = p2[1].get_color()
-scatter(1:Tw, L32, label="")
+scatter(1:Tw, L32, ms, label="")
+ylims = ax.get_ylim()
+ax.fill_between(1:Tw, L31, ylims[1], where=L31 .>= L32, facecolor = "gray", alpha = 0.5)
 #legend()
 ax.text(-0.2, 1.1, panelnames[3], transform=ax.transAxes,
      fontsize=fsp, fontweight="bold", va="top")

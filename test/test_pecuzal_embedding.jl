@@ -11,6 +11,7 @@ using DelimitedFiles
 using Random
 
 include("../src/pecuzal_method.jl")
+include("../src/data_analysis_functions.jl")
 
 println("\nTesting pecuzal_method.jl...")
 @testset "PECUZAL" begin
@@ -29,7 +30,10 @@ println("\nTesting pecuzal_method.jl...")
     @time Y, τ_vals, ts_vals, Ls , εs = pecuzal_embedding(s[1:5000];
                                         τs = 0:Tmax , w = w, samplesize = samplesize,
                                         K = K, KNN = KNN)
-
+    L1 = sum(Ls)
+    L2 = compute_delta_L(s[1:5000], τ_vals, Tmax;
+         KNN = KNN, w = w)
+    @test L1 == L2
     @test -0.728 < Ls[1] < -0.727
     @test -0.323 < Ls[2] < -0.322
 
@@ -48,6 +52,7 @@ end
     # OS and load the resulting time series (see /test/timeseries/produce_timeseries.jl)
 
     include("../src/pecuzal_method.jl")
+    include("../src/data_analysis_functions.jl")
     tr = readdlm("./test/timeseries/lorenz_pecora_multi.csv")
     tr = Dataset(tr) # input timeseries = x component of lorenz
     w1 = estimate_delay(tr[:,1], "mi_min")
@@ -59,7 +64,9 @@ end
 
     @time Y, τ_vals, ts_vals, Ls , ε★ = pecuzal_embedding(tr[1:5000,:];
                                          τs = 0:Tmax , w = w, samplesize = samplesize)
-
+    L1 = sum(Ls)
+    L2 = compute_delta_L(tr[1:5000,:], τ_vals, ts_vals, Tmax; KNN = KNN, w = w)
+    @test L1 == L2
     @test length(ts_vals) == 5
     @test ts_vals[3] == ts_vals[4] == ts_vals[5] == 1
     @test ts_vals[1] == 3
@@ -90,44 +97,3 @@ end
 end
 
 end
-
-# include("../src/pecuzal_method.jl")
-# idx = 487
-# idx = 14
-# N = 8 # number of oscillators
-# Fs = 3.5:0.002:5 # parameter spectrum
-# F = Fs[idx]
-# dt = 0.1 # sampling time
-# total = 5000  # time series length
-# 
-# # Parameters analysis:
-# ε = 0.05  # recurrence threshold
-# dmax = 10   # maximum dimension for traditional tde
-# lmin = 2   # minimum line length for RQA
-# trials = 80 # trials for MCDTS
-# taus = 0:100 # possible delays
-#
-# # randomly pick one time series
-# t_idx = 2
-# t_idx = [2, 4, 7]
-#
-# # init Lorenz96
-# u0 = [0.590; 0.766; 0.566; 0.460; 0.794; 0.854; 0.200; 0.298]
-# lo96 = Systems.lorenz96(N, u0; F = F)
-#
-# #set_parameter!(lo96, 1, F)
-# data = trajectory(lo96, total*dt; dt = dt, Ttr = 2500 * dt)
-# data_sample = data[1:5000,t_idx]
-#
-# w = estimate_delay(data_sample[:,1], "mi_min")
-#
-# @time Y, τ_vals, ts_vals, Ls , ε★ = pecuzal_embedding(data_sample;
-#                                     τs = taus , w = w)
-#
-# using PyPlot
-# pygui(true)
-#
-# figure()
-# plot3D(Y[:,1], Y[:,2], Y[:,3])
-# #plot3D(data_sample[:,1], data_sample[:,2], data_sample[:,3])
-# grid()

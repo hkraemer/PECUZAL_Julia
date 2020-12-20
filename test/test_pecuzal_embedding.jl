@@ -1,8 +1,8 @@
 using DrWatson
 @quickactivate "PECUZAL_Julia"
 
-# These tests are only for DelayEmbeddings.jl are not strictly needed for this
-# scientific project
+# These tests are only for development and further merging the functionality into
+# DelayEmbeddings.jl and are not strictly needed for this scientific project
 
 using DelayEmbeddings
 using DynamicalSystemsBase
@@ -27,7 +27,7 @@ println("\nTesting pecuzal_method.jl...")
     samplesize = 1
     KNN = 3
 
-    @time Y, τ_vals, ts_vals, Ls , εs = pecuzal_embedding(s[1:5000];
+    @time Y, τ_vals, ts_vals, Ls , εs = pecuzal_embedding_update(s[1:5000];
                                         τs = 0:Tmax , w = w, samplesize = samplesize,
                                         K = K, KNN = KNN)
     L1 = sum(Ls)
@@ -61,8 +61,9 @@ end
     w = w1
     Tmax = 100
     samplesize = 1
+    KNN = 3
 
-    @time Y, τ_vals, ts_vals, Ls , ε★ = pecuzal_embedding(tr[1:5000,:];
+    @time Y, τ_vals, ts_vals, Ls , ε★ = pecuzal_embedding_update(tr[1:5000,:];
                                          τs = 0:Tmax , w = w, samplesize = samplesize)
     L1 = sum(Ls)
     L2 = compute_delta_L(tr[1:5000,:], τ_vals, ts_vals, Tmax; KNN = KNN, w = w)
@@ -90,7 +91,7 @@ end
     w2 = estimate_delay(d2, "mi_min")
     w = w1
 
-    @time Y, τ_vals, ts_vals, Ls , ε★ = pecuzal_embedding(dummy_set;
+    @time Y, τ_vals, ts_vals, Ls , ε★ = pecuzal_embedding_update(dummy_set;
                                         τs = 0:Tmax , w = w, samplesize = samplesize)
 
     @test size(Y,2) == 1

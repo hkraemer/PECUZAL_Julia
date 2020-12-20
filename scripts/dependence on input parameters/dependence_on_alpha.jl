@@ -32,7 +32,7 @@ sizes = []
 εs = []
 for alpha in alphas
     display(alpha)
-    YY, τ_valss, _, Lss , ε = pecuzal_embedding(s;
+    YY, τ_valss, _, Lss , ε = pecuzal_embedding_update(s;
                                 τs = 0:Tmax , w = w, samplesize = samplesize,
                                 K = K, KNN = KNN, Tw = Tw, α = alpha)
     push!(sizes,size(YY,2))

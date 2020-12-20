@@ -53,7 +53,7 @@ function mdop_time(data, w)
 end
 
 function pec_time(data, w, taus)
-    Y_pec, τ_vals_pec, ts_vals_pec, Ls_pec , εs_pec = pecuzal_embedding(data;
+    Y_pec, τ_vals_pec, ts_vals_pec, Ls_pec , εs_pec = pecuzal_embedding_update(data;
                                                                 τs = taus , w = w)
 end
 

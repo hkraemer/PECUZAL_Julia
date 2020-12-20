@@ -7,7 +7,7 @@ pygui(true)
 # Here plot the results from scripts `dependence_on_alpha.jl`, `dependence_on_K.jl`,
 # `dependence_on_p.jl`, `dependence_on_delta_neighborhood.jl`, `dependence_on_Tw.jl`,
 
-panelnames = ["A" "B" "C" "D" "E" "F" "G" "H" "I" "J"]
+panelnames = ["A" "B" "C" "D" "E" "F" "G" "H"]
 
 fig = figure(figsize=[15,12])
 
@@ -50,7 +50,7 @@ Ls = readdlm("./scripts/computed data/dependence_on_K_Ls.csv")
 τ_vals = readdlm("./scripts/computed data/dependence_on_K_tau_vals.csv")
 τ_vals = Int.(τ_vals)
 
-ax = fig.add_subplot(5, 2, 1)
+ax = fig.add_subplot(4, 2, 1)
 p1 = plot(Ks, Ls[:,1], label="1st embedding cylce", linewidth=lwg)
 color1 = p1[1].get_color()
 scatter(Ks, Ls[:,1], label="")
@@ -65,7 +65,7 @@ xlabel("K-NN")
 ylabel("L")
 grid()
 
-ax = fig.add_subplot(5, 2, 2)
+ax = fig.add_subplot(4, 2, 2)
 plot(Ks, τ_vals[:,1], label="τ₀, 1st embedding cylce", linewidth=lwg, color="r")
 scatter(Ks, τ_vals[:,1], label="", color="r")
 plot(Ks, τ_vals[:,2], label="τ₁, 2nd embedding cylce", linewidth=lwg, color=color1)
@@ -89,7 +89,7 @@ Ls = readdlm("./scripts/computed data/dependence_on_delta_neighborhood_Ls.csv")
 τ_vals = readdlm("./scripts/computed data/dependence_on_delta_neighborhood_tau_vals.csv")
 τ_vals = Int.(τ_vals)
 
-ax = fig.add_subplot(5, 2, 3)
+ax = fig.add_subplot(4, 2, 3)
 p1 = plot(deltas, Ls[:,1], label="1st embedding cylce", linewidth=lwg)
 color1 = p1[1].get_color()
 scatter(deltas, Ls[:,1], label="")
@@ -104,7 +104,7 @@ xlabel(L"\delta-Neighborhood size", fontweight="normal")
 ylabel("L")
 grid()
 
-ax = fig.add_subplot(5, 2, 4)
+ax = fig.add_subplot(4, 2, 4)
 plot(deltas, τ_vals[:,1], label="τ₁, 1st embedding cylce", linewidth=lwg, color="r")
 scatter(deltas, τ_vals[:,1], label="", color="r")
 plot(deltas, τ_vals[:,2], label="τ₂, 2nd embedding cylce", linewidth=lwg, color=color1)
@@ -130,7 +130,7 @@ Ls = readdlm("./scripts/computed data/dependence_on_p_Ls.csv")
 εs = readdlm("./scripts/computed data/dependence_on_p_epsilons.csv")
 
 
-ax = fig.add_subplot(5, 2, 5)
+ax = fig.add_subplot(4, 2, 5)
 p1 = plot(ps', Ls[:,1], label="1st embedding cylce", linewidth=lwg)
 color1 = p1[1].get_color()
 scatter(ps', Ls[:,1], label="")
@@ -145,7 +145,7 @@ xlabel("(binomial-) p")
 ylabel("L")
 grid()
 
-ax = fig.add_subplot(5, 2, 6)
+ax = fig.add_subplot(4, 2, 6)
 plot(ps', τ_vals[:,1], label="τ₁, 1st embedding cylce", linewidth=lwg, color="r")
 scatter(ps', τ_vals[:,1], label="", color="r")
 plot(ps', τ_vals[:,2], label="τ₂, 2nd embedding cylce", linewidth=lwg, color=color1)
@@ -172,7 +172,7 @@ Ls = readdlm("./scripts/computed data/dependence_on_alpha_Ls.csv")
 εs = readdlm("./scripts/computed data/dependence_on_alpha_epsilons.csv")
 
 
-ax = fig.add_subplot(5, 2, 7)
+ax = fig.add_subplot(4, 2, 7)
 p1 = scatter(alphas', Ls[:,1], label="1st embedding cylce")
 p2 = scatter(alphas', Ls[:,2], label="2nd embedding cylce")
 #legend()
@@ -185,7 +185,7 @@ xlabel("(binomial-) α")
 ylabel("L")
 grid()
 
-ax = fig.add_subplot(5, 2, 8)
+ax = fig.add_subplot(4, 2, 8)
 scatter(alphas', τ_vals[:,1], label="τ₁, embedding cylce 0", c="r")
 #scatter(alphas', τ_vals[:,1], label="", color="r")
 scatter(alphas', τ_vals[:,2], label="τ₂, embedding cylce 1", color=color1)
@@ -202,52 +202,6 @@ ax.text(-0.15, 1.1, panelnames[8], transform=ax.transAxes,
 xlabel("(binomial-) α")
 ylabel("τ")
 grid()
-
-# 5) Dependence on Tw
-
-Tws = readdlm("./scripts/computed data/dependence_on_Tw_Tws.csv")
-sizes = readdlm("./scripts/computed data/dependence_on_Tw_sizes.csv")
-Ls = readdlm("./scripts/computed data/dependence_on_Tw_Ls.csv")
-τ_vals = readdlm("./scripts/computed data/dependence_on_Tw_tau_vals.csv")
-
-τ_vals[1,3]=NaN64
-τ_vals[2,3]=NaN64
-τ_vals[3,3]=NaN64
-Ls[1,3]=NaN64
-Ls[2,3]=NaN64
-Ls[3,3]=NaN64
-
-ax = fig.add_subplot(5, 2, 9)
-p1 = plot(Tws, Ls[:,1], label="embedding cylce 1", linewidth=lwg)
-color1 = p1[1].get_color()
-scatter(Tws, Ls[:,1], label="")
-p2 = plot(Tws, Ls[:,2], label="embedding cylce 2", linewidth=lwg)
-color2 = p2[1].get_color()
-scatter(Tws, Ls[:,2], label="")
-#legend()
-ax.text(-0.15, 1.1, panelnames[9], transform=ax.transAxes,
-     fontsize=fsp, fontweight="bold", va="top")
-#title("minimum L")
-xlabel("time window")
-ylabel("L")
-grid()
-
-ax = fig.add_subplot(5, 2, 10)
-plot(Tws, τ_vals[:,1], label="τ₁, embedding cylce 0", linewidth=lwg, color="r")
-scatter(Tws, τ_vals[:,1], label="", color="r")
-plot(Tws, τ_vals[:,2], label="τ₂, embedding cylce 1", linewidth=lwg, color=color1)
-scatter(Tws, τ_vals[:,2], label="", color=color1)
-plot(Tws, τ_vals[:,3], label="τ₃, embedding cylce 2", linewidth=lwg, color=color2)
-scatter(Tws, τ_vals[:,3], label="", color=color2)
-#legend()
-ax.set_ylim([-1,24])
-ax.text(-0.15, 1.1, panelnames[10], transform=ax.transAxes,
-     fontsize=fsp, fontweight="bold", va="top")
-#title("chosen delays")
-xlabel("time window")
-ylabel("τ")
-grid()
-
 
 
 

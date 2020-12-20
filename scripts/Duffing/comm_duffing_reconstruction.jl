@@ -117,7 +117,7 @@ L_GA = uzal_cost(Y_GA, Tw = (4*w), w = w, samplesize=1)
 
 #Pecuzal
 println("Computation time pecuzal method:")
-@time Y_pec, τ_vals_pec, ts_vals_pec, Ls_pec , εs_pec = pecuzal_embedding(tr[:,2];
+@time Y_pec, τ_vals_pec, ts_vals_pec, Ls_pec , εs_pec = pecuzal_embedding_update(tr[:,2];
                                                             τs = taus , w = w)
 
 L_pec = minimum(Ls_pec)

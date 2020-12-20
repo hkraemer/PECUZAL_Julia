@@ -465,6 +465,8 @@ function uzal_cost_pecuzal(Y::Dataset{D, ET}, Y_trial::Dataset{DT, ET}, Tw::Int;
 
     dist_former = 9999999 # intial L-decrease
 
+    vtree = KDTree(Y, metric)
+    vtree_trial = KDTree(Y_trial, metric)
     # loop over each time horizon
     cnt = 1
     for T = 2:Tw    # start at 2 will eliminate results for noise
@@ -474,10 +476,9 @@ function uzal_cost_pecuzal(Y::Dataset{D, ET}, Y_trial::Dataset{DT, ET}, Tw::Int;
         vs = Y[ns] # the fiducial points in the data set
         vs_trial = Y_trial[ns] # the fiducial points in the data set
 
-        vtree = KDTree(Y[1:NN], metric)
-        allNNidxs, allNNdist = all_neighbors(vtree, vs, ns, K, w)
-        vtree_trial = KDTree(Y_trial[1:NN], metric)
-        allNNidxs_trial, allNNdist_trial = all_neighbors(vtree_trial, vs_trial, ns, K, w)
+        tw_new(i, j) = (abs(i - j) ≤ w) || (i > NN)
+        allNNidxs, allNNdist = bulksearch(vtree, vs, NeighborNumber(K), tw_new)
+        allNNidxs_trial, allNNdist_trial = bulksearch(vtree_trial, vs_trial, NeighborNumber(K), tw_new)
 
         # compute conditional variances and neighborhood-sizes
         compute_conditional_variances!(ns, vs, vs_trial, allNNidxs,

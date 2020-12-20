@@ -165,7 +165,7 @@ LAM_pec = zeros(length(σs),1000)
         L_GA[cnt,i] = uzal_cost(Y_GA, Tw = (4*w), w = w, samplesize=1)
 
         #Pecuzal
-        Y_pec, τ_vals_pec, ts_vals_pec, Ls_pec , εs_pec = pecuzal_embedding(tr[:,1:2];
+        Y_pec, τ_vals_pec, ts_vals_pec, Ls_pec , εs_pec = pecuzal_embedding_update(tr[:,1:2];
                                                                     τs = taus , w = w)
         dim_pec[cnt,i] = size(Y_pec,2)
         L_pec[cnt,i] = minimum(Ls_pec)

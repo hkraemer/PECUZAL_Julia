@@ -1,3 +1,6 @@
+## This whole file is outdated and not necessary after the revision of the code
+# We leave it here anyway
+
 using DrWatson
 @quickactivate "PECUZAL_Julia"
 
@@ -31,7 +34,7 @@ Ls = []
 sizes = []
 for Tw in Tws
     display(Tw)
-    YY, τ_valss, _, Lss , _ = pecuzal_embedding(s;
+    YY, τ_valss, _, Lss , _ = pecuzal_embedding_update(s;
                                 τs = 0:Tmax , w = w, samplesize = samplesize,
                                 K = K, KNN = KNN, Tw = Tw)
     push!(sizes,size(YY,2))

@@ -9,10 +9,10 @@ using Neighborhood
 using StatsBase
 using Distances
 
-export pecuzal_embedding
+export pecuzal_embedding_update
 
 """
-    pecuzal_embedding(s; kwargs...) → Y, τ_vals, ts_vals, Ls ,⟨ε★⟩
+    pecuzal_embedding_update(s; kwargs...) → Y, τ_vals, ts_vals, ΔLs ,⟨ε★⟩
 A unified approach to properly embed a time series or a set of time series
 (`Dataset`) based on the ideas of Pecora et al. [^Pecoral2007] and Uzal et al.
 [^Uzal2011].
@@ -50,16 +50,16 @@ phase space trajectory `Y_actual` and compute the continuity statistic `⟨ε★
 1. Each local maxima in `⟨ε★⟩` is used for constructing a
 candidate embedding trajectory `Y_trial` with a delay corresponding to that
 specific peak in `⟨ε★⟩`. 2. We then compute the `L`-statistic [`uzal_cost`](@ref)
-for `Y_trial` (`L-trial`) and `Y_actual` (`L_actual`) for increasing prediction time
-horizons (free parameter in the `L`-statistic) and save the maximum difference
-`max(L-trial - L_actual)` as `L_decrease` (Note that this is a negative number,
-since the `L`-statistic decreases with better reconstructions). 3. We pick the
-peak/`τ`-value, for which `L_decrease` is minimal (=maximum decrease of the overall
-`L`-value) and construct the actual embedding trajectory `Y_actual`
-(steps 1.-3. correspond to an embedding cycle). 4. We repeat steps 1.-3. with
-`Y_actual` as input and stop the algorithm when `L_decrease` is > 0, i.e. when
-and additional embedding component would not lead to a lower overall L-value.
-`Y_actual` -> `Y`.
+for `Y_trial` (`L-trial`) and `Y_actual` (`L_actual`) for increasing prediction
+time horizons (free parameter in the `L`-statistic) and save the maximum
+difference `max(L-trial - L_actual)` as `ΔL` (Note that this is a
+negative number, since the `L`-statistic decreases with better reconstructions).
+3. We pick the peak/`τ`-value, for which `ΔL` is minimal (=maximum decrease of
+the overall `L`-value) and construct the actual embedding trajectory
+`Y_actual` (steps 1.-3. correspond to an embedding cycle). 4. We repeat steps
+1.-3. with `Y_actual` as input and stop the algorithm when `ΔL` is > 0,
+i.e. when and additional embedding component would not lead to a lower overall
+L-value. `Y_actual` -> `Y`.
 
 In case of multivariate embedding, i.e. when embedding a set of M time series
 (`s::Dataset`), in each embedding cycle the continuity statistic `⟨ε★⟩` gets
@@ -77,7 +77,7 @@ cycle are stored in `τ_vals` and the according time series numbers chosen for
 each delay value in `τ_vals` are stored in `ts_vals`. For univariate embedding
 (`s::Vector`) `ts_vals` is a vector of ones of length `τ_vals`, because there is
 simply just one time series to choose from. The function also returns the
-`L_decrease`-values for each embedding cycle and the continuity statistic `⟨ε★⟩`
+`ΔLs`-values for each embedding cycle and the continuity statistic `⟨ε★⟩`
 as an `Array` of `Vector`s.
 
 For distance computations the Euclidean norm is used.
@@ -85,7 +85,7 @@ For distance computations the Euclidean norm is used.
 [^Pecora2007]: Pecora, L. M., Moniz, L., Nichols, J., & Carroll, T. L. (2007). [A unified approach to attractor reconstruction. Chaos 17(1)](https://doi.org/10.1063/1.2430294).
 [^Uzal2011]: Uzal, L. C., Grinblat, G. L., Verdes, P. F. (2011). [Optimal reconstruction of dynamical systems: A noise amplification approach. Physical Review E 84, 016223](https://doi.org/10.1103/PhysRevE.84.016223).
 """
-function pecuzal_embedding(s::Vector{T}; τs = 0:50 , w::Int = 1,
+function pecuzal_embedding_update(s::Vector{T}; τs = 0:50 , w::Int = 1,
     samplesize::Real = 1, K::Int = 13, KNN::Int = 3, threshold::Real = 0,
     α::Real = 0.05, p::Real = 0.5, max_cycles::Int = 50) where {T<:Real}
 
@@ -129,7 +129,7 @@ function pecuzal_embedding(s::Vector{T}; τs = 0:50 , w::Int = 1,
 
 end
 
-function pecuzal_embedding(Y::Dataset{D, T}; τs = 0:50 , w::Int = 1,
+function pecuzal_embedding_update(Y::Dataset{D, T}; τs = 0:50 , w::Int = 1,
     samplesize::Real = 1, K::Int = 13, KNN::Int = 3, threshold::Real = 0,
     α::Real = 0.05, p::Real = 0.5, max_cycles::Int = 50) where {D, T<:Real}
 
@@ -465,8 +465,6 @@ function uzal_cost_pecuzal(Y::Dataset{D, ET}, Y_trial::Dataset{DT, ET}, Tw::Int;
 
     dist_former = 9999999 # intial L-decrease
 
-    vtree = KDTree(Y, metric)
-    vtree_trial = KDTree(Y_trial, metric)
     # loop over each time horizon
     cnt = 1
     for T = 2:Tw    # start at 2 will eliminate results for noise
@@ -476,9 +474,10 @@ function uzal_cost_pecuzal(Y::Dataset{D, ET}, Y_trial::Dataset{DT, ET}, Tw::Int;
         vs = Y[ns] # the fiducial points in the data set
         vs_trial = Y_trial[ns] # the fiducial points in the data set
 
-        tw_new(i, j) = (abs(i - j) ≤ w) || (i > NN)
-        allNNidxs, allNNdist = bulksearch(vtree, vs, NeighborNumber(K), tw_new)
-        allNNidxs_trial, allNNdist_trial = bulksearch(vtree_trial, vs_trial, NeighborNumber(K), tw_new)
+        vtree = KDTree(Y[1:NN], metric)
+        allNNidxs, allNNdist = all_neighbors(vtree, vs, ns, K, w)
+        vtree_trial = KDTree(Y_trial[1:NN], metric)
+        allNNidxs_trial, allNNdist_trial = all_neighbors(vtree_trial, vs_trial, ns, K, w)
 
         # compute conditional variances and neighborhood-sizes
         compute_conditional_variances!(ns, vs, vs_trial, allNNidxs,

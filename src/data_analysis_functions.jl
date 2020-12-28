@@ -306,6 +306,8 @@ function ar_process(u0::T, α::T, p::T, N::Int) where {T<:Real}
 end
 
 """
+compute_delta_L(s, τs, (js,) T_max; KNN = 3, w = 1, metric = Euclidean) → ΔL
+
     Compute the overall L-decrease `ΔL` of a given embedding of the time series
 `s::Vector` with the delay values `τs` up to a maximum `T`-value `T_max`. We
 respect the Theiler window `w`, the chosen `metric` and the number of considered

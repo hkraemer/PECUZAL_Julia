@@ -45,13 +45,11 @@ w3 = estimate_delay(tr[:,3], method)
 w = maximum(hcat(w1,w2,w3))
 taus = 0:100
 
-# L-value of reference
-L_ref = uzal_cost(tr, Tw = 4*w), w = w, samplesize=1)
-
 #Standard TDE
-@time Y_tde, τ = standard_embedding_cao(tr[:,1])
-E2s = DelayEmbeddings.stochastic_indicator(tr[:,1], τ, 1:size(Y_tde,2))
-L_tde = uzal_cost(Y_tde, Tw = (4*w), w = w, samplesize=1)
+@time Y_tde, τ, _ = optimal_traditional_de(tr[:,1], "afnn", "ac_zero"; τs = taus)
+d_tde = size(Y_tde,2)
+τ_tde = [(i-1)*τ for i = 1:d_tde]
+L_tde = compute_delta_L(tr[:,1], τ_tde, taus[end]; w = w)
 
 #MDOP embedding
 println("Computation time MDOP:")
@@ -91,20 +89,20 @@ println("Computation time MDOP:")
 
     Y_mdop, τ_vals_mdop, ts_vals_mdop, FNNs_mdop , βs_mdop = mdop_embedding(tr;
                                                         τs = taus_mdop , w = w)
-    L_mdop = uzal_cost(Y_mdop, Tw = (4*w), w = w, samplesize=1)
+    L_mdop = compute_delta_L(tr, τ_vals_mdop, ts_vals_mdop, taus_mdop[end]; w = w)
 end
 
 #Garcia & Almeida
 println("Computation time Garcia & Almeida method:")
 @time Y_GA, τ_vals_GA, ts_vals_GA, FNNs_GA , ns_GA = garcia_almeida_embedding(tr;
                                                     τs = taus , w = w, T = w)
-L_GA = uzal_cost(Y_GA, Tw = (4*w), w = w, samplesize=1)
+L_GA = compute_delta_L(tr, τ_vals_GA, ts_vals_GA, taus[end]; w = w)
 
 #Pecuzal
 println("Computation time pecuzal method:")
 @time Y_pec, τ_vals_pec, ts_vals_pec, Ls_pec , εs_pec = pecuzal_embedding_update(tr;
                                                             τs = taus , w = w)
-L_pec = minimum(Ls_pec)
+L_pec = sum(Ls_pec)
 
 
 ## compute other evaluation statistics
@@ -115,12 +113,12 @@ L_pec = minimum(Ls_pec)
                     Dataset(Y_GA), Dataset(Y_pec); ε = 0.08, w = w, kNN = 10)
 
 
-# writedlm("./scripts/Fooling systems/noise results/Y_GA.csv",Y_GA)
-# writedlm("./scripts/Fooling systems/noise results/Y_mdop.csv",Y_mdop)
-# writedlm("./scripts/Fooling systems/noise results/Y_pec.csv",Y_pec)
-# writedlm("./scripts/Fooling systems/noise results/taus_GA.csv", τ_vals_GA)
-# writedlm("./scripts/Fooling systems/noise results/taus_mdop.csv", τ_vals_mdop)
-# writedlm("./scripts/Fooling systems/noise results/taus_pec.csv", τ_vals_pec)
-# writedlm("./scripts/Fooling systems/noise results/ts_GA.csv", ts_vals_GA)
-# writedlm("./scripts/Fooling systems/noise results/ts_mdop.csv", ts_vals_mdop)
-# writedlm("./scripts/Fooling systems/noise results/ts_pec.csv", ts_vals_pec)
+writedlm("./scripts/Fooling systems/noise results/Y_GA.csv",Y_GA)
+writedlm("./scripts/Fooling systems/noise results/Y_mdop.csv",Y_mdop)
+writedlm("./scripts/Fooling systems/noise results/Y_pec.csv",Y_pec)
+writedlm("./scripts/Fooling systems/noise results/taus_GA.csv", τ_vals_GA)
+writedlm("./scripts/Fooling systems/noise results/taus_mdop.csv", τ_vals_mdop)
+writedlm("./scripts/Fooling systems/noise results/taus_pec.csv", τ_vals_pec)
+writedlm("./scripts/Fooling systems/noise results/ts_GA.csv", ts_vals_GA)
+writedlm("./scripts/Fooling systems/noise results/ts_mdop.csv", ts_vals_mdop)
+writedlm("./scripts/Fooling systems/noise results/ts_pec.csv", ts_vals_pec)

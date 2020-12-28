@@ -28,7 +28,6 @@ L_tde = readdlm("./scripts/Mackey Glass/ensemble results/L_tde.csv")
 L_GA = readdlm("./scripts/Mackey Glass/ensemble results/L_GA.csv")
 L_mdop = readdlm("./scripts/Mackey Glass/ensemble results/L_mdop.csv")
 L_pec = readdlm("./scripts/Mackey Glass/ensemble results/L_pec.csv")
-L_ref = readdlm("./scripts/Mackey Glass/ensemble results/L_ref.csv")
 DET_tde = readdlm("./scripts/Mackey Glass/ensemble results/DET_tde.csv")
 DET_GA = readdlm("./scripts/Mackey Glass/ensemble results/DET_GA.csv")
 DET_mdop = readdlm("./scripts/Mackey Glass/ensemble results/DET_mdop.csv")
@@ -58,12 +57,12 @@ mean_JRRF = zeros(2,4)
 std_JRRF = zeros(2,4)
 mean_mfnn = zeros(2,4)
 std_mfnn = zeros(2,4)
-mean_L = zeros(2,5)
-std_L = zeros(2,5)
+mean_L = zeros(2,4)
+std_L = zeros(2,4)
 mean_dims = zeros(2,4)
 std_dims = zeros(2,4)
 
-for i = 1:5
+for i = 1:4
 	for j = 1:2
 		if i == 1
 			mean_JRRF[j,i] = mean(jrrf_tde[j,:])
@@ -101,9 +100,6 @@ for i = 1:5
 			std_L[j,i] = std(L_pec[j,:])
 			mean_dims[j,i] = mean(dims_pec[j,:])
 			std_dims[j,i] = std(dims_pec[j,:])
-		elseif i == 5
-			mean_L[j,i] = mean(L_ref[j,:])
-			std_L[j,i] = std(L_ref[j,:])
 		end
 	end
 end

@@ -26,7 +26,8 @@ tr = regularize(tr)
 
 # define function which wrap the whole embedding process
 function tde_time(data, w, taus)
-    Y_tde, τ_tde = standard_embedding_cao(data; τs = taus)
+    # use cao's method
+    Y_tde, τ_tde, _ = optimal_traditional_de(data; w = w, τs = taus)
 end
 
 function GA_time(data, w, taus)

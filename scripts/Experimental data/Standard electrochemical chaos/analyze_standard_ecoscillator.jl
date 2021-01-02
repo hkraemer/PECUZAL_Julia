@@ -155,7 +155,12 @@ pvalue(wtest_mdop)
 pvalue(wtest_pec)
 
 
-wtest_tde = UnequalVarianceTTest(L_tde1, L_tde2)
-wtest_GA = UnequalVarianceTTest(RQA_GA1[RQA_measure,:], RQA_GA2[RQA_measure,:])
-wtest_mdop = UnequalVarianceTTest(RQA_mdop1[RQA_measure,:], RQA_mdop2[RQA_measure,:])
-wtest_pec = UnequalVarianceTTest(RQA_pec1[RQA_measure,:], RQA_pec2[RQA_measure,:])
+wtest_tde = UnequalVarianceTTest(vec(L_tde1), vec(L_tde2))
+wtest_GA = UnequalVarianceTTest(vec(L_GA1), vec(L_GA2))
+wtest_mdop = UnequalVarianceTTest(vec(L_mdop1), vec(L_mdop2))
+wtest_pec = UnequalVarianceTTest(vec(L_pec1), vec(L_pec2))
+
+pvalue(wtest_tde)
+pvalue(wtest_GA)
+pvalue(wtest_mdop)
+pvalue(wtest_pec)

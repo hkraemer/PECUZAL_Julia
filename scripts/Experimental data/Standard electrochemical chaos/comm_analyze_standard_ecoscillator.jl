@@ -35,22 +35,22 @@ M2 = length(data2)
 M = minimum(hcat(M1, M2))
 
 # downsampling
-data1 = data1[1:2:M]
-data2 = data2[1:2:M]
+data1 = data1[1:4:M]
+data2 = data2[1:4:M]
 M = length(data1)
 
 data1 = regularize(data1 .+ .000001*randn(length(data1)))
 data2 = regularize(data2 .+ .000001*randn(length(data2)))
 
 # the possible lags
-taus = 0:150
+taus = 0:100
 
 # set recurrence threshold for further analysis (and min line length)
 ε = 0.08
 lmin = 2
 
 # set length of time series sample
-N = 2000
+N = 1000
 
 # number of time series samples
 samplesize = 1000

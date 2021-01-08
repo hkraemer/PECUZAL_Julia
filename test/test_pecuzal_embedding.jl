@@ -13,6 +13,34 @@ using Random
 include("../src/pecuzal_method.jl")
 include("../src/data_analysis_functions.jl")
 
+println("\nTesting pecuzal_method.jl for comparison to MATLAB and Python implementations:")
+@testset "PECUZAL other algorithm comparison" begin
+    s = readdlm("./test/timeseries/lorenz_pecora_uni_x.csv")
+    s = vec(s[1:500]) # input timeseries = x component of lorenz
+    Tmax = 100
+    theiler = 21
+
+    @time Y, τ_vals, ts_vals, Ls , εs = pecuzal_embedding_update(s;
+                               τs = 0:Tmax , w = theiler)
+    @test size(Y,2) == 4
+    @test -0.615 < sum(Ls) < -0.6149
+    @test τ_vals[2]  == 21
+    @test τ_vals[3]  == 78
+    @test τ_vals[4]  == 6
+
+    tr = readdlm("./test/timeseries/lorenz_pecora_multi.csv")
+    tr = Dataset(tr) # input timeseries = x component of lorenz
+    w = 15
+    Tmax = 100
+
+    @time Y, τ_vals, ts_vals, Ls , ε★ = pecuzal_embedding_update(tr[1:500,1:2];
+                                         τs = 0:Tmax , w = w)
+    @test ts_vals[1] == 2
+    @test ts_vals[2] == 1
+    @test τ_vals[1] == τ_vals[2] == 0
+    @test sum(Ls) < -0.5505736
+end
+
 println("\nTesting pecuzal_method.jl...")
 @testset "PECUZAL" begin
 @testset "Univariate example" begin

@@ -1,5 +1,13 @@
 clear, clc
 
+h = plot(1:10,1:10,1:10,2:11,1:10,3:12,1:10,4:13);
+c = get(h,'Color');
+
+c1 = c{1};
+c2 = c{4};
+c3 = c{3};
+c4 = c{2};
+
 % legend fontsize
 fsl = 30;
 % label fontsize
@@ -12,17 +20,18 @@ fst = 40;
 
 % Rössler uni
 % Initialize data points
-TDE = [.78 .9 .97 .9999 .93 .95];
-GA = [.58 -1.05 .82 .9992 .710 .81];
-MDOP = [0.75 .9 1 .9999 .9 .9];
-PECUZAL = [.78 1 1 .9999 .92 .95];
+TDE = [.71 .85 .9 .9999 .95 .97];
+GA = [.48 -.64 .73 .9992 .68 .93];
+MDOP = [0.64 .79 .88 .9999 .82 .93];
+PECUZAL = [.73 1 1 .9999 .92 .96];
 P = [TDE; GA; MDOP; PECUZAL];
 
 figure('Units','normalized','Position',[.3 .3 .8 .8])
 % Spider plot
 spider_plot(P,...
-    'AxesLabels', {'JRRF', 'MFNN', 'L', 'DET', 'ENTR', 'RTE'},...
-    'AxesLimits', [.5, -1.05, .7, .7, .7, .7; 1, 1, 1, 1, 1, 1],...
+    'AxesLabels', {'JRRF', 'MFNN', '\DeltaL', 'DET', 'ENTR', 'RTE'},...
+    'AxesLimits', [.4, -.64, .6, .6, .6, .6; 1, 1, 1, 1, 1, 1],...
+    'Color', [c1; c2; c3; c4],...
     'FillOption', 'on',...
     'LabelFontSize', fsla,...
     'FillTransparency', 0.2);
@@ -32,17 +41,18 @@ legend('standard TDE', 'Garcia & Almeida', 'MDOP', 'PECUZAL', 'Location', 'south
 
 % Rössler multi
 % Initialize data points
-TDE = [.78 .31 0.96 .9999 .93 .95];
-GA = [.8 -0.06 0.93 .9997 .84 .93];
-MDOP = [0.8 .68 .99 .9999 .94 .97];
-PECUZAL = [.865 1 1 1 .94 .97];
+TDE = [.71 -.98 0.8 .9999 .95 .97];
+GA = [.83 .52 1 .999 .84 .94];
+MDOP = [0.86 .9 .8 .9998 .91 .98];
+PECUZAL = [.87 1 .94 .9999 .92 .99];
 P = [TDE; GA; MDOP; PECUZAL];
 
 figure('Units','normalized','Position',[.3 .3 .8 .8])
 % Spider plot
 spider_plot(P,...
-    'AxesLabels', {'JRRF', 'MFNN', 'L', 'DET', 'ENTR', 'RTE'},...
-    'AxesLimits', [.7, -0.1, .7, .7, .7, .7; 1, 1, 1, 1, 1, 1],...
+    'AxesLabels', {'JRRF', 'MFNN', '\DeltaL', 'DET', 'ENTR', 'RTE'},...
+    'AxesLimits', [.4, -1, .6, .6, .6, .6; 1, 1, 1, 1, 1, 1],...
+    'Color', [c1; c2; c3; c4],...
     'FillOption', 'on',...
     'LabelFontSize', fsla,...
     'FillTransparency', 0.2);
@@ -53,17 +63,18 @@ legend('standard TDE', 'Garcia & Almeida', 'MDOP', 'PECUZAL', 'Location', 'south
 
 % Duffing uni
 % Initialize data points
-TDE = [.78 .9 .97 .9999 .93 .95];
-GA = [.58 -1.1 .82 0.9999 .71 .81];
-MDOP = [.75 .9 1 0.9999 .9 .9];
-PECUZAL = [.78 1 1 0.9999 .92 .95];
+TDE = [.82 .94 .95 .9961 .56 .97];
+GA = [.8 .71 .96 0.9964 .64 .98];
+MDOP = [.83 .95 .95 0.9959 .58 .99];
+PECUZAL = [.84 1 1 0.9958 .55 .98];
 P = [TDE; GA; MDOP; PECUZAL];
 
 figure('Units','normalized','Position',[.3 .3 .8 .8])
 % Spider plot
 spider_plot(P,...
-    'AxesLabels', {'JRRF', 'MFNN', 'L', 'DET', 'ENTR', 'RTE'},...
-    'AxesLimits', [.5, -1.1, .7, .7, .4, .7; 1, 1, 1, 1, 1, 1],...
+    'AxesLabels', {'JRRF', 'MFNN', '\DeltaL', 'DET', 'ENTR', 'RTE'},...
+    'AxesLimits', [.5, .7, .7, .7, .4, .7; 1, 1, 1, 1, 1, 1],...
+    'Color', [c1; c2; c3; c4],...
     'FillOption', 'on',...
     'LabelFontSize', fsla,...
     'FillTransparency', 0.2);
@@ -73,17 +84,18 @@ legend('standard TDE', 'Garcia & Almeida', 'MDOP', 'PECUZAL', 'Location', 'south
 
 % Duffing multi
 % Initialize data points
-TDE = [.78 1 .78 .9999 .93 .95];
-GA = [.79 .17 .98 .9999 0.52 .98];
-MDOP = [.84 .74 .95 0.999 0.45 .97];
-PECUZAL = [.84 .43 1 0.999 0.56 .98];
+TDE = [.82 .73 .94 .9961 .56 .97];
+GA = [.8 .76 .88 .9917 0.51 .84];
+MDOP = [.83 1 .81 0.9958 0.49 .98];
+PECUZAL = [.84 .93 1 0.9958 0.56 .98];
 P = [TDE; GA; MDOP; PECUZAL];
 
 figure('Units','normalized','Position',[.3 .3 .8 .8])
 % Spider plot
 spider_plot(P,...
-    'AxesLabels', {'JRRF', 'MFNN', 'L', 'DET', 'ENTR', 'RTE'},...
-    'AxesLimits', [.5, -4.1, .7, .7, .4, .7; 1, 1, 1, 1, 1, 1],...
+    'AxesLabels', {'JRRF', 'MFNN', '\DeltaL', 'DET', 'ENTR', 'RTE'},...
+    'AxesLimits', [.5, .7, .7, .7, .4, .7; 1, 1, 1, 1, 1, 1],...
+    'Color', [c1; c2; c3; c4],...
     'FillOption', 'on',...
     'LabelFontSize', fsla,...
     'FillTransparency', 0.2);

@@ -35,6 +35,9 @@ A unified approach to properly embed a time series or a set of time series
 * `KNN::Int = 3`: the amount of nearest neighbors considered, in order to compute
   σ_k^2 (read algorithm description [`uzal_cost`]@ref). If given a vector, the
   minimum result over all `knn ∈ KNN` is returned.
+* `L_threshold::Real = 0`: The algorithm breaks, when this threshold is exceeded
+  by `ΔL` in an embedding cycle (set as a positive number, i.e. an absolute value
+  of `ΔL`).
 * `α::Real = 0.05`: The significance level for obtaining the continuity statistic
 * `p::Real = 0.5`: The p-parameter for the binomial distribution used for the
   computation of the continuity statistic ⟨ε★⟩.
@@ -64,9 +67,9 @@ L-value. `Y_actual` -> `Y`.
 In case of multivariate embedding, i.e. when embedding a set of M time series
 (`s::Dataset`), in each embedding cycle the continuity statistic `⟨ε★⟩` gets
 computed for all M time series available. The optimal delay value `τ` in each
-embedding cycle is chosen as the peak/`τ`-value for which `L_decrease` is
+embedding cycle is chosen as the peak/`τ`-value for which `ΔL` is
 minimal under all available peaks and under all M `⟨ε★⟩`'s. In the first
-embedding cycle there will be M^2 different `⟨ε★⟩`'s to consider, since it is
+embedding cycle there will be M² different `⟨ε★⟩`'s to consider, since it is
 not clear a priori which time series of the input should consitute the first
 component of the embedding vector and form `Y_actual`.
 
@@ -86,13 +89,13 @@ For distance computations the Euclidean norm is used.
 [^Uzal2011]: Uzal, L. C., Grinblat, G. L., Verdes, P. F. (2011). [Optimal reconstruction of dynamical systems: A noise amplification approach. Physical Review E 84, 016223](https://doi.org/10.1103/PhysRevE.84.016223).
 """
 function pecuzal_embedding_update(s::Vector{T}; τs = 0:50 , w::Int = 1,
-    samplesize::Real = 1, K::Int = 13, KNN::Int = 3, threshold::Real = 0,
+    samplesize::Real = 1, K::Int = 13, KNN::Int = 3, L_threshold::Real = 0,
     α::Real = 0.05, p::Real = 0.5, max_cycles::Int = 50) where {T<:Real}
 
     @assert 0 < samplesize ≤ 1 "Please select a valid `samplesize`, which denotes a fraction of considered fiducial points, i.e. `samplesize` ∈ (0 1]"
     @assert all(x -> x ≥ 0, τs)
-    @assert threshold ≥ 0
-    threshold = -threshold # due to the negativity of L-decrease
+    @assert L_threshold ≥ 0
+    threshold = -L_threshold # due to the negativity of L-decrease
     metric = Euclidean()
 
     s_orig = s
@@ -347,7 +350,7 @@ delay-indices `max_idx` for all local maxima in ε★
 """
 function local_L_statistics(ε★::Vector{T}, Y_act::Dataset{D, T}, s::Vector{T},
         τs, KNN::Int, w::Int, samplesize::Real, metric) where {D, T}
-    maxima, max_idx = get_maxima(ε★) # determine local maxima in ⟨ε★⟩
+    _, max_idx = get_maxima(ε★) # determine local maxima in ⟨ε★⟩
     L_decrease = zeros(Float64, length(max_idx))
     for (i,τ_idx) in enumerate(max_idx)
         # create candidate phase space vector for this peak/τ-value
@@ -449,16 +452,14 @@ function uzal_cost_pecuzal(Y::Dataset{D, ET}, Y_trial::Dataset{DT, ET}, Tw::Int;
     @assert DT == D+1
     @assert Tw ≥ 0
 
-    NNN = length(Y_trial)-1;
+    NNN = length(Y_trial)-1
     # preallocation for 1st dataset
     ϵ² = zeros(NNN)             # neighborhood size
-    E²_avrg = zeros(NNN)        # averaged conditional variance
     E² = zeros(NNN, Tw)         # conditional variance
     ϵ_ball = zeros(ET, K+1, D)  # epsilon neighbourhood
     u_k = zeros(ET, D)          # center of mass
     # preallocation for 2nd dataset
     ϵ²_trial = zeros(NNN)             # neighborhood size
-    E²_avrg_trial = zeros(NNN)        # averaged conditional variance
     E²_trial = zeros(NNN, Tw)         # conditional variance
     ϵ_ball_trial = zeros(ET, K+1, DT) # epsilon neighbourhood
     u_k_trial = zeros(ET, DT)         # center of mass
@@ -467,8 +468,8 @@ function uzal_cost_pecuzal(Y::Dataset{D, ET}, Y_trial::Dataset{DT, ET}, Tw::Int;
 
     # loop over each time horizon
     cnt = 1
-    for T = 2:Tw    # start at 2 will eliminate results for noise
-        NN = length(Y_trial)-T;
+    for T = 2:Tw    # start at 2 will eliminate bad results for noise
+        NN = length(Y_trial)-T
         ns = 1:NN
 
         vs = Y[ns] # the fiducial points in the data set
@@ -481,9 +482,8 @@ function uzal_cost_pecuzal(Y::Dataset{D, ET}, Y_trial::Dataset{DT, ET}, Tw::Int;
 
         # compute conditional variances and neighborhood-sizes
         compute_conditional_variances!(ns, vs, vs_trial, allNNidxs,
-            allNNdist, allNNidxs_trial, allNNdist_trial, Y, Y_trial, ϵ_ball,
-            ϵ_ball_trial, u_k, u_k_trial, T, K, metric, ϵ², ϵ²_trial, E²,
-            E²_trial, cnt)
+            allNNidxs_trial, Y, Y_trial, ϵ_ball, ϵ_ball_trial, u_k, u_k_trial,
+            T, K, metric, ϵ², ϵ²_trial, E², E²_trial, cnt)
 
         # compute distance of L-values and check whether that distance can be
         # increased
@@ -499,8 +499,7 @@ function uzal_cost_pecuzal(Y::Dataset{D, ET}, Y_trial::Dataset{DT, ET}, Tw::Int;
 end
 
 function compute_conditional_variances!(ns, vs, vs_trial, allNNidxs::Vector{Array{Int64,1}},
-        allNNdist::Vector{Array{P,1}}, allNNidxs_trial::Vector{Array{Int64,1}},
-        allNNdist_trial::Vector{Array{P,1}}, Y::Dataset{D, P},
+        allNNidxs_trial::Vector{Array{Int64,1}}, Y::Dataset{D, P},
         Y_trial::Dataset{DT, P}, ϵ_ball::Array{P, 2}, ϵ_ball_trial::Array{P, 2},
         u_k::Vector{P}, u_k_trial::Vector{P}, T::Int, K::Int, metric, ϵ²::Vector,
         ϵ²_trial::Vector, E²::Array{P, 2}, E²_trial::Array{P, 2}, cnt::Int) where {P, D, DT}

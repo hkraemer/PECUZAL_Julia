@@ -18,7 +18,7 @@ ts_vals_pec = load("./correlated results/ts_pec.csv");
 
 fs = 20;
 
-figure('Units','normalized','Position',[.01 .01 .99 .99])
+figure('Units','normalized','Position',[.01 .01 .99 .6])
 subplot(131)
 plot3(Y_GA(:,1),Y_GA(:,2),Y_GA(:,3))
 str1 = sprintf('Garcia & Almeida',1.4);

@@ -32,16 +32,6 @@ N = 5000 # number of samples
 dt_tra = 0.1
 t = 0:dt_tra:(dt_tra*N)
 
-
-# function duffing!(du,u,p,t)
-#     x,y,z = u
-#     δ,α,β,γ,ω = p
-#
-#     du[1] = y # dx
-#     du[2] = -δ*y - α*x - β*x^3 + z #dy
-#     du[3] = γ*ω*cos(ω*t)# dz
-# end
-
 function duffing!(du,u,p,t)
     x,y,z = u
     μ,α,β,γ,ω = p
@@ -52,12 +42,11 @@ function duffing!(du,u,p,t)
 end
 
 # set parameters for chaotic Duffing system
-#δ = .3
 μ = .1
 α = 1
 β = 0
 γ = .5
-ω = 2
+ω = 1.9
 p = [μ,α,β,γ,ω]
 
 # random initial condition
@@ -117,7 +106,7 @@ L_GA = uzal_cost(Y_GA, Tw = (4*w), w = w, samplesize=1)
 
 #Pecuzal
 println("Computation time pecuzal method:")
-@time Y_pec, τ_vals_pec, ts_vals_pec, Ls_pec , εs_pec = pecuzal_embedding(tr[:,2];
+@time Y_pec, τ_vals_pec, ts_vals_pec, Ls_pec , εs_pec = pecuzal_embedding_update(tr[:,2];
                                                             τs = taus , w = w)
 
 L_pec = minimum(Ls_pec)

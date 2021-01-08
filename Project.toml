@@ -1,21 +1,21 @@
 name = "PECUZAL_Julia"
-authors = ["K. Hauke Kraemer <hkraemer@pik-potsdam.de>","George Datseris <george.datseris@mpimet.mpg.de>"]
-version = "0.1.0"
+authors = ["K. Hauke Kraemer <hkraemer@pik-potsdam.de>", "George Datseris <george.datseris@mpimet.mpg.de>"]
 repo = "https://github.com/hkraemer/PECUZAL_Julia"
+version = "0.2.0"
 
 [deps]
 DelayEmbeddings = "5732040d-69e3-5649-938a-b6b4f237613f"
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 Distances = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
 DrWatson = "634d3b9d-ee7a-5ddf-bec9-22491ea816e1"
 DynamicalSystems = "61744808-ddfa-5f27-97ff-6e42cc95d634"
+DynamicalSystemsBase = "6e36e845-645a-534a-86f2-f5d4aa5a06b4"
 HypothesisTests = "09f84164-cd44-5f33-b23f-e6b0d136a0d5"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 NearestNeighbors = "b8a86587-4115-5ab1-83bc-aa920d37bbce"
 PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee"
 RecurrenceAnalysis = "639c3291-70d9-5ea2-8c5b-839eba1ee399"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
-DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
-DynamicalSystemsBase = "6e36e845-645a-534a-86f2-f5d4aa5a06b4"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]

@@ -4,7 +4,7 @@ using DrWatson
 using Statistics
 using DelimitedFiles
 
-## compute mean and std of measures computed in `comm_roessler_ensemble.jl`
+## compute mean and std of measures computed in `comm_roessler_ensemble_uni.jl`
 
 # In the following the indexing for lines i and columns j is as follows:
 # i = 1: σ = 0
@@ -28,7 +28,6 @@ L_tde = readdlm("./scripts/Roessler/ensemble results/L_tde.csv")
 L_GA = readdlm("./scripts/Roessler/ensemble results/L_GA.csv")
 L_mdop = readdlm("./scripts/Roessler/ensemble results/L_mdop.csv")
 L_pec = readdlm("./scripts/Roessler/ensemble results/L_pec.csv")
-L_ref = readdlm("./scripts/Roessler/ensemble results/L_ref.csv")
 DET_tde = readdlm("./scripts/Roessler/ensemble results/DET_tde.csv")
 DET_GA = readdlm("./scripts/Roessler/ensemble results/DET_GA.csv")
 DET_mdop = readdlm("./scripts/Roessler/ensemble results/DET_mdop.csv")
@@ -53,17 +52,23 @@ dims_tde = readdlm("./scripts/Roessler/ensemble results/dim_tde.csv")
 dims_GA = readdlm("./scripts/Roessler/ensemble results/dim_GA.csv")
 dims_mdop = readdlm("./scripts/Roessler/ensemble results/dim_mdop.csv")
 dims_pec = readdlm("./scripts/Roessler/ensemble results/dim_pec.csv")
+TRANS_tde = readdlm("./scripts/Roessler/ensemble results/TRANS_tde.csv")
+TRANS_GA = readdlm("./scripts/Roessler/ensemble results/TRANS_GA.csv")
+TRANS_mdop = readdlm("./scripts/Roessler/ensemble results/TRANS_mdop.csv")
+TRANS_pec = readdlm("./scripts/Roessler/ensemble results/TRANS_pec.csv")
+TRANS_ref = readdlm("./scripts/Roessler/ensemble results/TRANS_ref.csv")
+
 
 mean_JRRF = zeros(2,4)
 std_JRRF = zeros(2,4)
 mean_mfnn = zeros(2,4)
 std_mfnn = zeros(2,4)
-mean_L = zeros(2,5)
-std_L = zeros(2,5)
+mean_L = zeros(2,4)
+std_L = zeros(2,4)
 mean_dims = zeros(2,4)
 std_dims = zeros(2,4)
 
-for i = 1:5
+for i = 1:4
 	for j = 1:2
 		if i == 1
 			mean_JRRF[j,i] = mean(jrrf_tde[j,:])
@@ -101,9 +106,6 @@ for i = 1:5
 			std_L[j,i] = std(L_pec[j,:])
 			mean_dims[j,i] = mean(dims_pec[j,:])
 			std_dims[j,i] = std(dims_pec[j,:])
-		elseif i == 5
-			mean_L[j,i] = mean(L_ref[j,:])
-			std_L[j,i] = std(L_ref[j,:])
 		end
 	end
 end
@@ -116,6 +118,8 @@ mean_RTE = zeros(2,4)
 std_RTE = zeros(2,4)
 mean_ENTR = zeros(2,4)
 std_ENTR = zeros(2,4)
+mean_TRANS = zeros(2,4)
+std_TRANS  = zeros(2,4)
 
 for i = 1:4
 	for j = 1:2
@@ -128,6 +132,8 @@ for i = 1:4
 			std_ENTR[j,i] = std( abs.(ENTR_tde[j,:] .- ENTR_ref[j,:]) ./ ENTR_ref[j,:])
 			mean_RTE[j,i] = mean( abs.(RTE_tde[j,:] .- RTE_ref[j,:]) ./ RTE_ref[j,:])
 			std_RTE[j,i] = std( abs.(RTE_tde[j,:] .- RTE_ref[j,:]) ./ RTE_ref[j,:])
+			mean_TRANS[j,i] = mean( abs.(TRANS_tde[j,:] .- TRANS_ref[j,:]) ./ TRANS_ref[j,:])
+			std_TRANS[j,i] = std( abs.(TRANS_tde[j,:] .- TRANS_ref[j,:]) ./ TRANS_ref[j,:])
 		elseif i == 2
 			mean_DET[j,i] = mean( abs.(DET_GA[j,:] .- DET_ref[j,:]) ./ DET_ref[j,:])
 			std_DET[j,i] = std( abs.(DET_GA[j,:] .- DET_ref[j,:]) ./ DET_ref[j,:])
@@ -137,6 +143,8 @@ for i = 1:4
 			std_ENTR[j,i] = std( abs.(ENTR_GA[j,:] .- ENTR_ref[j,:]) ./ ENTR_ref[j,:])
 			mean_RTE[j,i] = mean( abs.(RTE_GA[j,:] .- RTE_ref[j,:]) ./ RTE_ref[j,:])
 			std_RTE[j,i] = std( abs.(RTE_GA[j,:] .- RTE_ref[j,:]) ./ RTE_ref[j,:])
+			mean_TRANS[j,i] = mean( abs.(TRANS_GA[j,:] .- TRANS_ref[j,:]) ./ TRANS_ref[j,:])
+			std_TRANS[j,i] = std( abs.(TRANS_GA[j,:] .- TRANS_ref[j,:]) ./ TRANS_ref[j,:])
 		elseif i == 3
 			mean_DET[j,i] = mean( abs.(DET_mdop[j,:] .- DET_ref[j,:]) ./ DET_ref[j,:])
 			std_DET[j,i] = std( abs.(DET_mdop[j,:] .- DET_ref[j,:]) ./ DET_ref[j,:])
@@ -146,6 +154,8 @@ for i = 1:4
 			std_ENTR[j,i] = std( abs.(ENTR_mdop[j,:] .- ENTR_ref[j,:]) ./ ENTR_ref[j,:])
 			mean_RTE[j,i] = mean( abs.(RTE_mdop[j,:] .- RTE_ref[j,:]) ./ RTE_ref[j,:])
 			std_RTE[j,i] = std( abs.(RTE_mdop[j,:] .- RTE_ref[j,:]) ./ RTE_ref[j,:])
+			mean_TRANS[j,i] = mean( abs.(TRANS_mdop[j,:] .- TRANS_ref[j,:]) ./ TRANS_ref[j,:])
+			std_TRANS[j,i] = std( abs.(TRANS_mdop[j,:] .- TRANS_ref[j,:]) ./ TRANS_ref[j,:])
 		elseif i == 4
 			mean_DET[j,i] = mean( abs.(DET_pec[j,:] .- DET_ref[j,:]) ./ DET_ref[j,:])
 			std_DET[j,i] = std( abs.(DET_pec[j,:] .- DET_ref[j,:]) ./ DET_ref[j,:])
@@ -155,6 +165,8 @@ for i = 1:4
 			std_ENTR[j,i] = std( abs.(ENTR_pec[j,:] .- ENTR_ref[j,:]) ./ ENTR_ref[j,:])
 			mean_RTE[j,i] = mean( abs.(RTE_pec[j,:] .- RTE_ref[j,:]) ./ RTE_ref[j,:])
 			std_RTE[j,i] = std( abs.(RTE_pec[j,:] .- RTE_ref[j,:]) ./ RTE_ref[j,:])
+			mean_TRANS[j,i] = mean( abs.(TRANS_pec[j,:] .- TRANS_ref[j,:]) ./ TRANS_ref[j,:])
+			std_TRANS[j,i] = std( abs.(TRANS_pec[j,:] .- TRANS_ref[j,:]) ./ TRANS_ref[j,:])
 		end
 	end
 end

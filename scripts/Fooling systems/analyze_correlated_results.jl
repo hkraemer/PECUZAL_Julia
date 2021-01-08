@@ -1,12 +1,9 @@
 using DrWatson
 @quickactivate "PECUZAL_Julia"
 
-using DifferentialEquations
-using DynamicalSystems
-using DelayEmbeddings
 using DelimitedFiles
 
-include("../../src/pecora_uzal_method.jl")
+include("../../src/pecuzal_method.jl")
 include("../../src/data_analysis_functions.jl")
 
 Y_GA = readdlm("./scripts/Fooling systems/correlated results/Y_GA.csv")

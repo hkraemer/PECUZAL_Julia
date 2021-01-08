@@ -5,6 +5,7 @@ using DifferentialEquations
 using DynamicalSystems
 using DelayEmbeddings
 using DelimitedFiles
+using Random
 
 include("../../src/pecuzal_method.jl")
 include("../../src/data_analysis_functions.jl")
@@ -24,7 +25,7 @@ include("../../src/data_analysis_functions.jl")
 # correlated values of these time series.
 
 ## Generate data
-
+Random.seed!(234)
 # set time interval for integration
 N = 5000 # number of samples
 dt_tra = 0.03
@@ -58,9 +59,6 @@ w6 = estimate_delay(tr[:,6], method)
 
 w = maximum(hcat(w1,w2,w3,w4,w5,w6))
 taus = 0:100
-
-# L-value of reference
-L_ref = uzal_cost(tr, Tw = (4*w), w = w, samplesize=1)
 
 #MDOP embedding
 println("Computation time MDOP:")
@@ -130,27 +128,27 @@ println("Computation time MDOP:")
 
     Y_mdop, τ_vals_mdop, ts_vals_mdop, FNNs_mdop , βs_mdop = mdop_embedding(tr;
                                                         τs = taus_mdop , w = w)
-    L_mdop = uzal_cost(Y_mdop, Tw = (4*w), w = w, samplesize=1)
+    L_mdop = compute_delta_L(tr, τ_vals_mdop, ts_vals_mdop, taus_mdop[end]; w = w)
 end
 
 #Garcia & Almeida
 println("Computation time Garcia & Almeida method:")
 @time Y_GA, τ_vals_GA, ts_vals_GA, FNNs_GA , ns_GA = garcia_almeida_embedding(tr;
                                                     τs = taus , w = w, T = w)
-L_GA = uzal_cost(Y_GA, Tw = (4*w), w = w, samplesize=1)
+L_GA = compute_delta_L(tr, τ_vals_GA, ts_vals_GA, taus[end]; w = w)
 
 #Pecuzal
 println("Computation time pecuzal method:")
-@time Y_pec, τ_vals_pec, ts_vals_pec, Ls_pec , εs_pec = pecuzal_embedding(tr;
+@time Y_pec, τ_vals_pec, ts_vals_pec, Ls_pec , εs_pec = pecuzal_embedding_update(tr;
                                                             τs = taus , w = w)
-L_pec = minimum(Ls_pec)
+L_pec = sum(Ls_pec)
 
 
 using PyPlot
 pygui(true)
 
 figure()
-plot(Y_GA[:,1], Y_GA[:,2], Y_GA[:,3])
+plot3D(Y_GA[:,1], Y_GA[:,2], Y_GA[:,3])
 title("GA")
 
 figure()
@@ -161,12 +159,12 @@ figure()
 plot3D(Y_pec[:,1], Y_pec[:,2], Y_pec[:,3])
 title("pec")
 
-# writedlm("./scripts/Fooling systems/correlated results/Y_GA.csv",Y_GA)
-# writedlm("./scripts/Fooling systems/correlated results/Y_mdop.csv",Y_mdop)
-# writedlm("./scripts/Fooling systems/correlated results/Y_pec.csv",Y_pec)
-# writedlm("./scripts/Fooling systems/correlated results/taus_GA.csv", τ_vals_GA)
-# writedlm("./scripts/Fooling systems/correlated results/taus_mdop.csv", τ_vals_mdop)
-# writedlm("./scripts/Fooling systems/correlated results/taus_pec.csv", τ_vals_pec)
-# writedlm("./scripts/Fooling systems/correlated results/ts_GA.csv", ts_vals_GA)
-# writedlm("./scripts/Fooling systems/correlated results/ts_mdop.csv", ts_vals_mdop)
-# writedlm("./scripts/Fooling systems/correlated results/ts_pec.csv", ts_vals_pec)
+writedlm("./scripts/Fooling systems/correlated results/Y_GA.csv",Y_GA)
+writedlm("./scripts/Fooling systems/correlated results/Y_mdop.csv",Y_mdop)
+writedlm("./scripts/Fooling systems/correlated results/Y_pec.csv",Y_pec)
+writedlm("./scripts/Fooling systems/correlated results/taus_GA.csv", τ_vals_GA)
+writedlm("./scripts/Fooling systems/correlated results/taus_mdop.csv", τ_vals_mdop)
+writedlm("./scripts/Fooling systems/correlated results/taus_pec.csv", τ_vals_pec)
+writedlm("./scripts/Fooling systems/correlated results/ts_GA.csv", ts_vals_GA)
+writedlm("./scripts/Fooling systems/correlated results/ts_mdop.csv", ts_vals_mdop)
+writedlm("./scripts/Fooling systems/correlated results/ts_pec.csv", ts_vals_pec)

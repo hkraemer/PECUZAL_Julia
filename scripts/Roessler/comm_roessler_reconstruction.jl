@@ -25,12 +25,57 @@ include("../../src/data_analysis_functions.jl")
 # Here we look at a chaotic system: The Roessler attractor in the funnel regime
 
 ## Integrate system and determine theiler window
+using Random
+using DifferentialEquations
+Random.seed!(234)
+# set time interval for integration
+N = 15000 # number of samples
+transients = 2000
+dt_tra = 0.01
+tspan = (dt_tra*N) + (dt_tra*transients)
 
-roe = Systems.roessler()
+function roessler!(du,u,p,t)
+    x,y,z = u
+    a,b,c = p
+    du[1] = -(y+z) # dx
+    du[2] = x + (a*y) # dy
+    du[3] = b+z*(x-c) # dz
+end
+
+function prob_func_roe(prob,i,repeat)
+  @. prob.u0 = [2*rand(); 2*rand(); 2*rand()]
+  prob
+end
+
+# parameter values
+a = .2925
+b = .1
+c = 8.5
+p = [a, b, c]
+
+u0 = [2*rand(); 2*rand(); 2*rand()]
+roe = ODEProblem(roessler!,u0,tspan,p)
+tr = solve(roe; saveat = dt_tra)
+tr = tr.u
+
+roe_ensemble = EnsembleProblem(roe; prob_func = prob_func_roe)
+sim = solve(roe_ensemble; saveat = dt_tra, trajectories = 1000)
+
+
+pygui(true)
+
+figure()
+plot3D(tr[:,1], tr[:,2], tr[:,3])
+
+a = .36
+b = .01
+c = 14
+u0 = [rand(); 5+rand(); 50+rand()]
+roe = Systems.roessler(u0 ; a=a, b=b, c=c)
 
 # set time interval for integration
-N = 5000 # number of samples
-dt_tra = 0.05
+N = 10000 # number of samples
+dt_tra = 0.01
 t = 0:dt_tra:(dt_tra*N)
 
 tr = trajectory(roe, (N*dt_tra); dt = dt_tra, Ttr = (2000*dt_tra))
@@ -91,11 +136,11 @@ L_GA = uzal_cost(Y_GA, Tw = (4*w), w = w, samplesize=1)
 
 #Pecuzal
 println("Computation time pecuzal method:")
-@time Y_pec, τ_vals_pec, ts_vals_pec, Ls_pec , εs_pec = pecuzal_embedding(tr[:,1:2];
+@time Y_pec, τ_vals_pec, ts_vals_pec, Ls_pec , εs_pec = pecuzal_embedding_update(tr[:,1:2];
                                                             τs = taus , w = w)
 L_pec = minimum(Ls_pec)
 
-@time Y_pec, τ_vals_pec, ts_vals_pec, Ls_pec , εs_pec = pecuzal_embedding(tr[:,1:2];
+@time Y_pec, τ_vals_pec, ts_vals_pec, Ls_pec , εs_pec = pecuzal_embedding_update(tr[:,1:2];
                                                             τs = taus , w = w)
 
 

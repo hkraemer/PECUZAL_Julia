@@ -43,14 +43,14 @@ data1 = regularize(data1 .+ .000001*randn(length(data1)))
 data2 = regularize(data2 .+ .000001*randn(length(data2)))
 
 # the possible lags
-taus = 0:100
+taus = 0:200
 
 # set recurrence threshold for further analysis (and min line length)
 ε = 0.08
 lmin = 2
 
 # set length of time series sample
-N = 1000
+N = 500
 
 # number of time series samples
 samplesize = 1000
@@ -88,8 +88,8 @@ dim_pec1 = zeros(Int, samplesize)
 dim_pec2 = zeros(Int, samplesize)
 L_pec1 = zeros(samplesize)
 L_pec2 = zeros(samplesize)
-
-for i = 1:samplesize
+include("../../../src/pecuzal_method.jl")
+for i = 1:1
     display("run: $i")
     # draw the actual sample
     idx1 = idxs1[i]

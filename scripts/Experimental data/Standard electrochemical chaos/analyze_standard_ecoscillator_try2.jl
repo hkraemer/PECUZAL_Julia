@@ -342,6 +342,29 @@ for i = 1:4
     diff_RQA_pec2[i] = abs(median_RQA_pec2[i]-RQA_pec_ref2[i])/std_RQA_pec2[i]
 end
 
+rel_diff_RQA_tde1 = zeros(4)
+rel_diff_RQA_tde2 = zeros(4)
+rel_diff_RQA_GA1 = zeros(4)
+rel_diff_RQA_GA2 = zeros(4)
+rel_diff_RQA_mdop1 = zeros(4)
+rel_diff_RQA_mdop2 = zeros(4)
+rel_diff_RQA_pec1 = zeros(4)
+rel_diff_RQA_pec2 = zeros(4)
+
+for i = 1:4
+    rel_diff_RQA_tde1[i] = abs(median_RQA_tde1[i]-RQA_tde_ref1[i])/RQA_tde_ref1[i]
+    rel_diff_RQA_tde2[i] = abs(median_RQA_tde2[i]-RQA_tde_ref2[i])/RQA_tde_ref2[i]
+
+    rel_diff_RQA_GA1[i] = abs(median_RQA_GA1[i]-RQA_GA_ref1[i])/RQA_GA_ref1[i]
+    rel_diff_RQA_GA2[i] = abs(median_RQA_GA2[i]-RQA_GA_ref2[i])/RQA_GA_ref2[i]
+
+    rel_diff_RQA_mdop1[i] = abs(median_RQA_mdop1[i]-RQA_mdop_ref1[i])/RQA_mdop_ref1[i]
+    rel_diff_RQA_mdop2[i] = abs(median_RQA_mdop2[i]-RQA_mdop_ref2[i])/RQA_mdop_ref2[i]
+
+    rel_diff_RQA_pec1[i] = abs(median_RQA_pec1[i]-RQA_pec_ref1[i])/RQA_pec_ref1[i]
+    rel_diff_RQA_pec2[i] = abs(median_RQA_pec2[i]-RQA_pec_ref2[i])/RQA_pec_ref2[i]
+end
+
 
 mn1 = [diff_RQA_tde1[1], diff_RQA_tde1[2], diff_RQA_tde1[3], diff_RQA_tde1[4],
     diff_RQA_GA1[1], diff_RQA_GA1[2], diff_RQA_GA1[3], diff_RQA_GA1[4],
@@ -374,3 +397,59 @@ total_diff_mdop2 = sum(diff_RQA_mdop2)
 
 total_diff_pec1 = sum(diff_RQA_pec1)
 total_diff_pec2 = sum(diff_RQA_pec2)
+
+
+rel_mn1 = [rel_diff_RQA_tde1[1], rel_diff_RQA_tde1[2], rel_diff_RQA_tde1[3], rel_diff_RQA_tde1[4],
+    rel_diff_RQA_GA1[1], rel_diff_RQA_GA1[2], rel_diff_RQA_GA1[3], rel_diff_RQA_GA1[4],
+    rel_diff_RQA_mdop1[1], rel_diff_RQA_mdop1[2], rel_diff_RQA_mdop1[3], rel_diff_RQA_mdop1[4],
+    rel_diff_RQA_pec1[1], rel_diff_RQA_pec1[2], rel_diff_RQA_pec1[3], rel_diff_RQA_pec1[4]
+    ]
+rel_mn2 = [rel_diff_RQA_tde2[1], rel_diff_RQA_tde2[2], rel_diff_RQA_tde2[3], rel_diff_RQA_tde2[4],
+    rel_diff_RQA_GA2[1], rel_diff_RQA_GA2[2], rel_diff_RQA_GA2[3], rel_diff_RQA_GA2[4],
+    rel_diff_RQA_mdop2[1], rel_diff_RQA_mdop2[2], rel_diff_RQA_mdop2[3], rel_diff_RQA_mdop2[4],
+    rel_diff_RQA_pec2[1], rel_diff_RQA_pec2[2], rel_diff_RQA_pec2[3], rel_diff_RQA_pec2[4]
+    ]
+
+# save relative deviations for plotting in Matlab
+writedlm("./scripts/Experimental data/Standard electrochemical chaos/RQA results/relative_dev_RQA_1.csv", rel_mn1)
+writedlm("./scripts/Experimental data/Standard electrochemical chaos/RQA results/relative_dev_RQA_2.csv", rel_mn2)
+
+StatsPlots.groupedbar(nam, rel_mn1, group = sx, ylabel = "rel .deviation from reference",
+        title = "chem. Oscillators Exp.1")
+
+StatsPlots.groupedbar(nam, rel_mn2, group = sx, ylabel = "rel .deviation from reference",
+        title = "chem. Oscillators Exp.2")
+
+total_rel_diff_tde1 = sum(rel_diff_RQA_tde1)
+total_rel_diff_tde2 = sum(rel_diff_RQA_tde2)
+
+total_rel_diff_GA1 = sum(rel_diff_RQA_GA1)
+total_rel_diff_GA2 = sum(rel_diff_RQA_GA2)
+
+total_rel_diff_mdop1 = sum(rel_diff_RQA_mdop1)
+total_rel_diff_mdop2 = sum(rel_diff_RQA_mdop2)
+
+total_rel_diff_pec1 = sum(rel_diff_RQA_pec1)
+total_rel_diff_pec2 = sum(rel_diff_RQA_pec2)
+
+# for plotting 1-rel.diff:
+plot_rel_mn1 = [1-rel_diff_RQA_tde1[1], 1-rel_diff_RQA_tde1[2], 1-rel_diff_RQA_tde1[3], 1-rel_diff_RQA_tde1[4],
+    1-rel_diff_RQA_GA1[1], 1-rel_diff_RQA_GA1[2], 1-rel_diff_RQA_GA1[3], 1-rel_diff_RQA_GA1[4],
+    1-rel_diff_RQA_mdop1[1], 1-rel_diff_RQA_mdop1[2], 1-rel_diff_RQA_mdop1[3], 1-rel_diff_RQA_mdop1[4],
+    1-rel_diff_RQA_pec1[1], 1-rel_diff_RQA_pec1[2], 1-rel_diff_RQA_pec1[3], 1-rel_diff_RQA_pec1[4]
+    ]
+plot_rel_mn2 = [1-rel_diff_RQA_tde2[1], 1-rel_diff_RQA_tde2[2], 1-rel_diff_RQA_tde2[3], 1-rel_diff_RQA_tde2[4],
+    1-rel_diff_RQA_GA2[1], 1-rel_diff_RQA_GA2[2], 1-rel_diff_RQA_GA2[3], 1-rel_diff_RQA_GA2[4],
+    1-rel_diff_RQA_mdop2[1], 1-rel_diff_RQA_mdop2[2], 1-rel_diff_RQA_mdop2[3], 1-rel_diff_RQA_mdop2[4],
+    1-rel_diff_RQA_pec2[1], 1-rel_diff_RQA_pec2[2], 1-rel_diff_RQA_pec2[3], 1-rel_diff_RQA_pec2[4]
+    ]
+
+StatsPlots.groupedbar(nam, plot_rel_mn1, group = sx, ylabel = "rel .deviation from reference",
+        title = "chem. Oscillators Exp.1")
+
+StatsPlots.groupedbar(nam, plot_rel_mn2, group = sx, ylabel = "rel .deviation from reference",
+        title = "chem. Oscillators Exp.2")
+
+
+# display results:
+round.(plot_rel_mn1[5]; digits=4)

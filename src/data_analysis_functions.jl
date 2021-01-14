@@ -306,6 +306,81 @@ function ar_process(u0::T, α::T, p::T, N::Int) where {T<:Real}
 end
 
 """
+Generate data from a AR(2) process for a initial value `u0`, AR-coefficients
+`α₁` and `α₂` and a white noise scaling parameter `p`. Return a time series of
+length `N`.
+"""
+function ar_process2(u0::Vector, α₁::T, α₂::T, p::T, N::Int) where {T<:Real}
+    @assert (length(u0) == 2)
+    x = zeros(T, N+100)
+    x[1] = u0[1]
+    x[2] = u0[1]
+    for i = 3:N+10
+        x[i] = α₂*x[i-2] + α₁*x[i-1] + p*randn()
+    end
+    return x[101:end]
+end
+
+"""
+Generate data from a AR(3) process for a initial value `u0`, AR-coefficients
+`α₁`, `α₂` and `α₃` and a white noise scaling parameter `p`. Return a time series of
+length `N`.
+"""
+function ar_process3(u0::Vector, α₁::T, α₂::T, α₃::T, p::T, N::Int) where {T<:Real}
+    @assert (length(u0) == 3)
+    x = zeros(T, N+100)
+    x[1] = u0[1]
+    x[2] = u0[2]
+    x[3] = u0[3]
+    for i = 4:N+10
+        x[i] = α₃*x[i-3] + α₂*x[i-2] + α₁*x[i-1] + p*randn()
+    end
+    return x[101:end]
+end
+
+"""
+Generate data from a AR(5) process for a initial value `u0`, AR-coefficients
+`α₁`, `α₂`, `α₃`, `α₄`, `α₅` and a white noise scaling parameter
+`p`. Return a time series of
+length `N`.
+"""
+function ar_process5(u0::Vector, α₁::T, α₂::T, α₃::T, α₄::T, α₅::T, p::T, N::Int) where {T<:Real}
+    @assert (length(u0) == 5)
+    x = zeros(T, N+100)
+    x[1] = u0[1]
+    x[2] = u0[2]
+    x[3] = u0[3]
+    x[4] = u0[4]
+    x[5] = u0[5]
+    for i = 6:N+10
+        x[i] = α₅*x[i-5] + α₄*x[i-4] + α₃*x[i-3] + α₂*x[i-2] + α₁*x[i-1] + p*randn()
+    end
+    return x[101:end]
+end
+
+"""
+Generate data from a AR(7) process for a initial value `u0`, AR-coefficients
+`α₁`, `α₂`, `α₃`, `α₄`, `α₅`, `α₆` and `α₇` and a white noise scaling parameter
+`p`. Return a time series of
+length `N`.
+"""
+function ar_process7(u0::Vector, α₁::T, α₂::T, α₃::T, α₄::T, α₅::T, α₆::T, α₇::T, p::T, N::Int) where {T<:Real}
+    @assert (length(u0) == 7)
+    x = zeros(T, N+100)
+    x[1] = u0[1]
+    x[2] = u0[2]
+    x[3] = u0[3]
+    x[4] = u0[4]
+    x[5] = u0[5]
+    x[6] = u0[6]
+    x[6] = u0[7]
+    for i = 8:N+10
+        x[i] = α₇*x[i-7] + α₆*x[i-6] + α₅*x[i-5] + α₄*x[i-4] + α₃*x[i-3] + α₂*x[i-2] + α₁*x[i-1] + p*randn()
+    end
+    return x[101:end]
+end
+
+"""
 compute_delta_L(s, τs, (js,) T_max; KNN = 3, w = 1, metric = Euclidean) → ΔL
 
     Compute the overall L-decrease `ΔL` of a given embedding of the time series

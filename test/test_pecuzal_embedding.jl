@@ -13,6 +13,7 @@ using Random
 include("../src/pecuzal_method.jl")
 include("../src/data_analysis_functions.jl")
 
+
 println("\nTesting pecuzal_method.jl for comparison to MATLAB and Python implementations:")
 @testset "PECUZAL other algorithm comparison" begin
     s = readdlm("./test/timeseries/lorenz_pecora_uni_x.csv")

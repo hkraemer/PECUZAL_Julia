@@ -469,7 +469,7 @@ function uzal_cost_pecuzal(Y::Dataset{D, ET}, Y_trial::Dataset{DT, ET}, Tw::Int;
     # loop over each time horizon
     cnt = 1
     for T = 2:Tw    # start at 2 will eliminate bad results for noise
-        NN = length(Y_trial)-T-w
+        NN = length(Y_trial)-T
         if NN < 1
             error("Time series too short for given possible delays and Theiler window to find enough nearest neighbours")
         end

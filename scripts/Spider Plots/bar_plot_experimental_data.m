@@ -49,7 +49,7 @@ t_sub = t(idx1:idx1+2500)/10;
 legend_labels = ["Cao's TDE", "Garcia & Almeida", "MDOP", "PECUZAL"];
 group_labels = {'ENTR', 'LAM', 'RTE', "{T}"};
 
-results_exp_1 = load("relative_dev_RQA_2.csv");
+results_exp_1 = load("relative_dev_RQA_1.csv");
 results = reshape(results_exp_1, [4,4]);
 
 [best, best_idx] = min(results, [], 2)

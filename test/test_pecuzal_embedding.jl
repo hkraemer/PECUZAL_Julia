@@ -13,7 +13,6 @@ using Random
 include("../src/pecuzal_method.jl")
 include("../src/data_analysis_functions.jl")
 
-
 println("\nTesting pecuzal_method.jl for comparison to MATLAB and Python implementations:")
 @testset "PECUZAL other algorithm comparison" begin
     s = readdlm("./test/timeseries/lorenz_pecora_uni_x.csv")
@@ -24,10 +23,18 @@ println("\nTesting pecuzal_method.jl for comparison to MATLAB and Python impleme
     @time Y, τ_vals, ts_vals, Ls , εs = pecuzal_embedding_update(s;
                                τs = 0:Tmax , w = theiler)
     @test size(Y,2) == 4
-    @test -0.615 < sum(Ls) < -0.6149
+    @test -0.6134 < sum(Ls) < -0.6133
     @test τ_vals[2]  == 21
-    @test τ_vals[3]  == 78
-    @test τ_vals[4]  == 6
+    @test τ_vals[3]  == 13
+    @test τ_vals[4]  == 78
+
+    @time Y, τ_vals, ts_vals, Ls , εs = pecuzal_embedding_update(s;
+                               τs = 0:Tmax , w = theiler, econ = true)
+
+    @test -0.6078 < sum(Ls) < -0.6077
+    @test τ_vals[2]  == 21
+    @test τ_vals[3]  == 13
+    @test τ_vals[4]  == 78
 
     tr = readdlm("./test/timeseries/lorenz_pecora_multi.csv")
     tr = Dataset(tr) # input timeseries = x component of lorenz
@@ -36,10 +43,19 @@ println("\nTesting pecuzal_method.jl for comparison to MATLAB and Python impleme
 
     @time Y, τ_vals, ts_vals, Ls , ε★ = pecuzal_embedding_update(tr[1:500,1:2];
                                          τs = 0:Tmax , w = w)
+    @test size(Y,2) == 2
     @test ts_vals[1] == 2
     @test ts_vals[2] == 1
     @test τ_vals[1] == τ_vals[2] == 0
     @test sum(Ls) < -0.5505736
+
+    @time Y, τ_vals, ts_vals, Ls , ε★ = pecuzal_embedding_update(tr[1:500,1:2];
+                                         τs = 0:Tmax , w = w, econ = true)
+    @test size(Y,2) == 2
+    @test ts_vals[1] == 2
+    @test ts_vals[2] == 1
+    @test τ_vals[1] == τ_vals[2] == 0
+    @test sum(Ls) < -0.544942
 end
 
 println("\nTesting pecuzal_method.jl...")
@@ -64,12 +80,32 @@ println("\nTesting pecuzal_method.jl...")
          KNN = KNN, w = w)
     @test L1 == L2
     @test -0.728 < Ls[1] < -0.727
-    @test -0.323 < Ls[2] < -0.322
+    @test -0.3234 < Ls[2] < -0.3233
 
     @test τ_vals[2] == 18
     @test τ_vals[3] == 9
 
     @test length(ts_vals) == 3
+
+    @time Y, τ_vals, ts_vals, Ls , εs = pecuzal_embedding_update(s[1:5000];
+                                        τs = 0:Tmax , w = w, samplesize = samplesize,
+                                        K = K, KNN = KNN, econ = true)
+
+    L1 = sum(Ls)
+
+    @test L1 < -1.047465
+    @test -0.7263 < Ls[1] < -0.7261
+    @test -0.3213 < Ls[2] < -0.3212
+
+    @test τ_vals[2] == 18
+    @test τ_vals[3] == 9
+
+    @test length(ts_vals) == 3
+
+    YY1 = DelayEmbeddings.hcat_lagged_values(Dataset(s), s, 21)
+    YY2 = DelayEmbeddings.hcat_lagged_values(YY1, s, 13)
+    @test length(YY1) == length(YY2)
+    @test YY1 == YY2[:,1:2]
 
 end
 
@@ -107,7 +143,7 @@ end
     @test τ_vals[5] == 0
     @test -0.936 < Ls[1] < -0.935
     @test -0.356 < Ls[2] < -0.355
-    @test -0.133 < Ls[3] < -0.132
+    @test -0.131 < Ls[3] < -0.130
     @test -0.015 < Ls[4] < -0.014
 
     # Dummy input
@@ -124,6 +160,7 @@ end
                                         τs = 0:Tmax , w = w, samplesize = samplesize)
 
     @test size(Y,2) == 1
+
 end
 
 end

@@ -42,7 +42,9 @@ A unified approach to properly embed a time series or a set of time series
 * `p::Real = 0.5`: The p-parameter for the binomial distribution used for the
   computation of the continuity statistic ⟨ε★⟩.
 * `max_cycles = 50`: The algorithm will stop after that many cycles no matter what.
-
+* `econ::Bool = false`: Economy-mode for L-statistic computation. Instead of
+  computing L-statistics for time horizons `2:Tw`, here we only compute them for
+  `2:2:Tw`, see description for further details.
 
 ## Description
 The method works iteratively and gradually builds the final embedding vectors
@@ -90,7 +92,8 @@ For distance computations the Euclidean norm is used.
 """
 function pecuzal_embedding_update(s::Vector{T}; τs = 0:50 , w::Int = 1,
     samplesize::Real = 1, K::Int = 13, KNN::Int = 3, L_threshold::Real = 0,
-    α::Real = 0.05, p::Real = 0.5, max_cycles::Int = 50) where {T<:Real}
+    α::Real = 0.05, p::Real = 0.5, max_cycles::Int = 50, econ::Bool = false
+    ) where {T<:Real}
 
     @assert 0 < samplesize ≤ 1 "Please select a valid `samplesize`, which denotes a fraction of considered fiducial points, i.e. `samplesize` ∈ (0 1]"
     @assert all(x -> x ≥ 0, τs)
@@ -118,7 +121,7 @@ function pecuzal_embedding_update(s::Vector{T}; τs = 0:50 , w::Int = 1,
     while flag
         Y_act = pecuzal_embedding_cycle!(
                 Y_act, flag, s, τs, w, counter, ε★s, τ_vals, metric,
-                Ls, ts_vals, samplesize, K, α, p, KNN)
+                Ls, ts_vals, samplesize, K, α, p, KNN, econ)
         flag = pecuzal_break_criterion(Ls, counter, max_cycles, threshold)
         counter += 1
     end
@@ -134,7 +137,8 @@ end
 
 function pecuzal_embedding_update(Y::Dataset{D, T}; τs = 0:50 , w::Int = 1,
     samplesize::Real = 1, K::Int = 13, KNN::Int = 3, threshold::Real = 0,
-    α::Real = 0.05, p::Real = 0.5, max_cycles::Int = 50) where {D, T<:Real}
+    α::Real = 0.05, p::Real = 0.5, max_cycles::Int = 50, econ::Bool = false
+    ) where {D, T<:Real}
 
     @assert 0 < samplesize ≤ 1 "Please select a valid `samplesize`, which denotes a fraction of considered fiducial points, i.e. `samplesize` ∈ (0 1]"
     @assert all(x -> x ≥ 0, τs)
@@ -163,7 +167,7 @@ function pecuzal_embedding_update(Y::Dataset{D, T}; τs = 0:50 , w::Int = 1,
     while flag
         Y_act = pecuzal_multivariate_embedding_cycle!(
                 Y_act, flag, Y, τs, w, counter, ε★s, τ_vals, metric,
-                Ls, ts_vals, samplesize, K, α, p, KNN)
+                Ls, ts_vals, samplesize, K, α, p, KNN, econ)
 
         flag = pecuzal_break_criterion(Ls, counter, max_cycles, threshold)
         counter += 1
@@ -185,7 +189,7 @@ Perform one univariate embedding cycle on `Y_act`. Return the new `Y_act`
 function pecuzal_embedding_cycle!(Y_act::Dataset{D, T}, flag::Bool, s::Vector,
         τs, w::Int, counter::Int, ε★s::AbstractArray, τ_vals::Vector{Int}, metric,
         Ls::Vector{T}, ts_vals::Vector{Int}, samplesize::Real, K::Int, α::Real,
-        p::Real, KNN::Int) where {D, T}
+        p::Real, KNN::Int, econ::Bool) where {D, T}
 
     ε★, _ = pecora(s, Tuple(τ_vals), Tuple(ts_vals); delays = τs, w = w,
                 samplesize = samplesize, K = K, metric = metric, α = α,
@@ -195,7 +199,7 @@ function pecuzal_embedding_cycle!(Y_act::Dataset{D, T}, flag::Bool, s::Vector,
     # zero-padding of ⟨ε★⟩ in order to also cover τ=0 (important for the multivariate case)
     ε★ = vec([0; ε★])
     # get the L-statistic-decrease for each peak in ⟨ε★⟩ and take the maximum one
-    L_trials, max_idx = local_L_statistics(ε★, Y_act, s, τs, KNN, w, samplesize, metric)
+    L_trials, max_idx = local_L_statistics(ε★, Y_act, s, τs, KNN, w, samplesize, metric, econ)
     L_min, min_idx = findmin(L_trials)
 
     push!(τ_vals, τs[max_idx[min_idx]-1])
@@ -214,19 +218,20 @@ Perform one embedding cycle on `Y_act` with a multivariate set Ys
 function pecuzal_multivariate_embedding_cycle!(Y_act, flag::Bool,
         Ys::Dataset{DT, T}, τs, w::Int, counter::Int, ε★s::AbstractMatrix,
         τ_vals::Vector{Int}, metric, Ls::Vector{T}, ts_vals::Vector{Int},
-        samplesize::Real, K::Int, α::Real, p::Real, KNN::Int) where {D, DT, T}
+        samplesize::Real, K::Int, α::Real, p::Real, KNN::Int, econ::Bool
+        ) where {D, DT, T}
 
     M = size(Ys,2)
     # in the 1st cycle we have to check all (size(Y,2)^2 combinations and pick
     # the tau according to maximum L-statistic decrease)
     if counter == 1
         Y_act = first_embedding_cycle_pecuzal!(Ys, M, τs, w, samplesize, K,
-                                metric, α, p, KNN, τ_vals, ts_vals, Ls, ε★s)
+                                metric, α, p, KNN, τ_vals, ts_vals, Ls, ε★s, econ)
     # in all other cycles we just have to check (size(Y,2)) combinations and pick
     # the tau according to maximum L-statistic decrease
     else
         Y_act = embedding_cycle_pecuzal!(Y_act, Ys, counter, M, τs, w, samplesize,
-                            K, metric, α, p, KNN, τ_vals, ts_vals, Ls, ε★s)
+                            K, metric, α, p, KNN, τ_vals, ts_vals, Ls, ε★s, econ)
     end
     return Y_act
 end
@@ -238,7 +243,7 @@ actual reconstruction vector `Y_act`.
 function first_embedding_cycle_pecuzal!(Ys::Dataset{D, T}, M::Int, τs, w::Int,
             samplesize::Real, K::Int, metric, α::Real, p::Real, KNN::Int,
             τ_vals::Vector{Int}, ts_vals::Vector{Int}, Ls::Vector{T},
-            ε★s::AbstractMatrix) where {D, T}
+            ε★s::AbstractMatrix, econ::Bool) where {D, T}
     counter = 1
     L_min = zeros(M)
     L_act = zeros(M)
@@ -253,7 +258,7 @@ function first_embedding_cycle_pecuzal!(Ys::Dataset{D, T}, M::Int, τs, w::Int,
         L_min[ts], L_min_idx[ts], idx[ts]  = choose_right_embedding_params(
                                         ε★[:,1+(M*(ts-1)):M*ts], Ys[:,ts],
                                         Ys, τs, KNN, w, samplesize,
-                                        metric)
+                                        metric, econ)
     end
     L_mini, min_idx = findmin(L_min)
     # update τ_vals, ts_vals, Ls, ε★s
@@ -277,14 +282,14 @@ Return the actual reconstruction vector `Y_act`.
 function embedding_cycle_pecuzal!(Y_act::Dataset{D, T}, Ys::Dataset{DT, T},
             counter::Int, M::Int, τs, w::Int, samplesize::Real, K::Int, metric,
             α::Real, p::Real, KNN::Int, τ_vals::Vector{Int}, ts_vals::Vector{Int},
-            Ls::Vector{T}, ε★s::AbstractMatrix) where {D, DT, T}
+            Ls::Vector{T}, ε★s::AbstractMatrix, econ::Bool) where {D, DT, T}
 
     ε★, _ = pecora(Ys, Tuple(τ_vals), Tuple(ts_vals); delays = τs, w = w,
             samplesize = samplesize, K = K, metric = metric, α = α,
             p = p, undersampling = false)
     # update τ_vals, ts_vals, Ls, ε★s
     choose_right_embedding_params!(ε★, Y_act, Ys, τ_vals, ts_vals, Ls, ε★s,
-                                counter, τs, KNN, w, samplesize, metric)
+                                counter, τs, KNN, w, samplesize, metric, econ)
     # create phase space vector for this embedding cycle
     Y_act = DelayEmbeddings.hcat_lagged_values(Y_act, Ys[:, ts_vals[counter+1]],
                                                         τ_vals[counter+1])
@@ -299,7 +304,7 @@ based on picking the peak in ε★, which corresponds to the minimal `L`-statist
 function choose_right_embedding_params!(ε★::AbstractMatrix, Y_act,
             Ys::Dataset{D, T}, τ_vals::Vector{Int}, ts_vals::Vector{Int},
             Ls::Vector{T}, ε★s::AbstractMatrix, counter::Int, τs, KNN::Int,
-            w::Int, samplesize::Real, metric) where {D, T}
+            w::Int, samplesize::Real, metric, econ::Bool) where {D, T}
 
     L_min_ = zeros(size(Ys,2))
     τ_idx = zeros(Int,size(Ys,2))
@@ -307,7 +312,7 @@ function choose_right_embedding_params!(ε★::AbstractMatrix, Y_act,
         # zero-padding of ⟨ε★⟩ in order to also cover τ=0 (important for the multivariate case)
         # get the L-statistic for each peak in ⟨ε★⟩ and take the one according to L_min
         L_trials_, max_idx_ = local_L_statistics(vec([0; ε★[:,ts]]), Y_act, Ys[:,ts],
-                                        τs, KNN, w, samplesize, metric)
+                                        τs, KNN, w, samplesize, metric, econ)
         L_min_[ts], min_idx_ = findmin(L_trials_)
         τ_idx[ts] = max_idx_[min_idx_]-1
     end
@@ -327,15 +332,15 @@ the chosen peak `τ_idx` and the number of the chosen time series to start with
 `idx`.
 """
 function choose_right_embedding_params(ε★::AbstractMatrix, Y_act,
-            Ys::Dataset{D, T}, τs, KNN::Int, w::Int, samplesize::Real, metric
-            ) where {D, T}
+            Ys::Dataset{D, T}, τs, KNN::Int, w::Int, samplesize::Real, metric,
+            econ::Bool) where {D, T}
     L_min_ = zeros(size(Ys,2))
     τ_idx = zeros(Int,size(Ys,2))
     for ts = 1:size(Ys,2)
         # zero-padding of ⟨ε★⟩ in order to also cover τ=0 (important for the multivariate case)
         # get the L-statistic for each peak in ⟨ε★⟩ and take the one according to L_min
         L_trials_, max_idx_ = local_L_statistics(vec([0; ε★[:,ts]]), Dataset(Y_act), Ys[:,ts],
-                                        τs, KNN, w, samplesize, metric)
+                                        τs, KNN, w, samplesize, metric, econ)
         L_min_[ts], min_idx_ = findmin(L_trials_)
         τ_idx[ts] = max_idx_[min_idx_]-1
     end
@@ -349,7 +354,8 @@ end
 delay-indices `max_idx` for all local maxima in ε★
 """
 function local_L_statistics(ε★::Vector{T}, Y_act::Dataset{D, T}, s::Vector{T},
-        τs, KNN::Int, w::Int, samplesize::Real, metric) where {D, T}
+        τs, KNN::Int, w::Int, samplesize::Real, metric, econ::Bool
+        ) where {D, T}
     _, max_idx = get_maxima(ε★) # determine local maxima in ⟨ε★⟩
     L_decrease = zeros(Float64, length(max_idx))
     for (i,τ_idx) in enumerate(max_idx)
@@ -357,7 +363,7 @@ function local_L_statistics(ε★::Vector{T}, Y_act::Dataset{D, T}, s::Vector{T}
         Y_trial = DelayEmbeddings.hcat_lagged_values(Y_act, s, τs[τ_idx-1])
         # compute L-statistic for Y_act and Y_trial and get the maximum decrease
         L_decrease[i] = uzal_cost_pecuzal(Y_act, Y_trial, τs[end]; K = KNN,
-                                w = w, metric = metric)
+                                w = w, metric = metric, econ = econ)
     end
     return L_decrease, max_idx
 end
@@ -444,23 +450,32 @@ minimum. Return the according minimum `L_decrease`-value.
 * `w = 1`: Theiler window (neighbors in time with index `w` close to the point,
   that are excluded from being true neighbors). `w=0` means to exclude only the
   point itself, and no temporal neighbors.
+* `econ::Bool = false`: Economy-mode for L-statistic computation. Instead of
+  computing L-statistics for time horizons `2:Tw`, here we only compute them for
+  `2:2:Tw`.
 """
 function uzal_cost_pecuzal(Y::Dataset{D, ET}, Y_trial::Dataset{DT, ET}, Tw::Int;
-        K::Int = 3, w::Int = 1, metric = Euclidean()
+        K::Int = 3, w::Int = 1, econ::Bool = false, metric = Euclidean()
     ) where {D, DT, ET}
 
     @assert DT == D+1
     @assert Tw ≥ 0
 
+    if econ
+        tws = 2:2:Tw # start at 2 will eliminate bad results for noise
+    else
+        tws = 2:Tw # start at 2 will eliminate bad results for noise
+    end
+
     NNN = length(Y_trial)-1
     # preallocation for 1st dataset
     ϵ² = zeros(NNN)             # neighborhood size
-    E² = zeros(NNN, Tw)         # conditional variance
+    E² = zeros(NNN, length(tws))         # conditional variance
     ϵ_ball = zeros(ET, K+1, D)  # epsilon neighbourhood
     u_k = zeros(ET, D)          # center of mass
     # preallocation for 2nd dataset
     ϵ²_trial = zeros(NNN)             # neighborhood size
-    E²_trial = zeros(NNN, Tw)         # conditional variance
+    E²_trial = zeros(NNN, length(tws))         # conditional variance
     ϵ_ball_trial = zeros(ET, K+1, DT) # epsilon neighbourhood
     u_k_trial = zeros(ET, DT)         # center of mass
 
@@ -468,7 +483,7 @@ function uzal_cost_pecuzal(Y::Dataset{D, ET}, Y_trial::Dataset{DT, ET}, Tw::Int;
 
     # loop over each time horizon
     cnt = 1
-    for T = 2:Tw    # start at 2 will eliminate bad results for noise
+    for T in tws
         NN = length(Y_trial)-T
         if NN < 1
             error("Time series too short for given possible delays and Theiler window to find enough nearest neighbours")

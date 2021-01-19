@@ -146,6 +146,11 @@ end
     @test -0.131 < Ls[3] < -0.130
     @test -0.015 < Ls[4] < -0.014
 
+    @time Y, τ_vals, ts_vals, Ls , ε★ = pecuzal_embedding_update(tr[1:5000,:];
+                        τs = 0:Tmax , w = w, L_threshold = 0.4, samplesize = samplesize)
+    @test -0.936 < Ls[1] < -0.935
+    @test length(Ls) == 1
+
     # Dummy input
     include("../src/pecuzal_method.jl")
     Random.seed!(1234)

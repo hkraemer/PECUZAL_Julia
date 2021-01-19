@@ -1,5 +1,5 @@
 .. image:: https://img.shields.io/badge/docs-dev-blue.svg
-    :target: https://github.com/JuliaDynamics/DelayEmbeddings.jl
+    :target: https://juliadynamics.github.io/DynamicalSystems.jl/dev/embedding/unified/
 
 PECUZAL Julia
 =============

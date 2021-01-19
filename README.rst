@@ -1,6 +1,9 @@
 .. image:: https://img.shields.io/badge/docs-dev-blue.svg
     :target: https://juliadynamics.github.io/DynamicalSystems.jl/dev/embedding/unified/
 
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4449785.svg
+   :target: https://doi.org/10.5281/zenodo.4449785
+
 PECUZAL Julia
 =============
 This code base is using the Julia Language and `DrWatson <https://juliadynamics.github.io/DrWatson.jl/stable/>`_

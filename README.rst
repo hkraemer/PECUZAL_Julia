@@ -34,7 +34,7 @@ code.
 The PECUZAL method is incorporated and maintained in the
 `DynamicalSystems.jl <https://juliadynamics.github.io/DynamicalSystems.jl/dev/>`_-Ecosystem,
 specifically in the `DelayEmbeddings.jl <https://github.com/JuliaDynamics/DelayEmbeddings.jl>`_
-package. `Here <https://juliadynamics.github.io/DynamicalSystems.jl/latest/embedding/unified/>`_
+package. `Here <https://juliadynamics.github.io/DelayEmbeddings.jl/stable/unified/>`_
 the reader can find a full documentation and some basic example illustrating the usage of the PECUZAL method.
 
 Citing and reference

@@ -6,6 +6,9 @@
 
 PECUZAL Julia
 =============
+
+.. image:: https://github.com/hkraemer/PECUZAL_Julia/raw/main/icon.webp
+
 This code base is using the Julia Language and `DrWatson <https://juliadynamics.github.io/DrWatson.jl/stable/>`_
 to make a reproducible scientific project, authored by K.Hauke Kraemer and
 George Datseris. It contains all the source code for producing the article [kraemer2020]_.
